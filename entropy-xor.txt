@@ -1,0 +1,6 @@
+Given a pseudorandom generator like xorshift128*/xoroshiro
+its possible to increase entropy by xoring the output
+of two such generators with independent seeds.
+If both generators are randomly perturbed(by generating numbers outside
+of xoring), the output is going to be completely unpredictable.
+
