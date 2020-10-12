@@ -6,13 +6,11 @@ This is obviously never used in serious code.
 the comments -CC ensure the newline preserved.
 */
 #include "print.h"
-#include "arguments.h"
 #define D #define
 #define IFND #ifndef
 #define ENDF #endif
-#define proxy1(x) x
 #define default_define(macro_name,argument_tuple,body...) IFND macro_name /* 
-*/ D proxy1(macro_name)(id argument_tuple) body  /*
+*/ D macro_name(id argument_tuple) body  /*
 */ ENDF
 
 //uncomment to change printed result.
