@@ -12,7 +12,7 @@ uint64_t i=1; while(n)i*=n--; return i;
 void tailcall(uint64_t* result,uint64_t n){
 if(n==0)return;
 *result=(*result) *n;
-return nonrec(result,n-1);
+return tailcall(result,n-1);
 }
 
 int main(int argc,char**argv){
