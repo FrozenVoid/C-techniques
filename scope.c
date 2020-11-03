@@ -22,7 +22,7 @@ exprstate("\nContext scope again:");//macros apply to local context
 int main(int argc,char**argv){
 int global=5;int local=100;
 exprstate("\nContext scope:");//macros inherit outer scope
-with(int global=1,int local=2,//uses do loop as {} 
+with(int global=1,int local=2,//create a block context where globals are overridden.
 print("\nLocal scope:",global,local));
 
 print("\nOuter scope:",global,local);
