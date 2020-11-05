@@ -9,7 +9,10 @@ return n == 0 ? 1 : n * elegantfactorial(n - 1);
 uint64_t uglyfactorial(uint64_t n) {
 uint64_t i=1; while(n)i*=n--; return i;
 }
-// tail call:recursion without stack cost
+/* tail call:recursion without stack cost( GCC "tail call elimination"
+also works for simple functions like elegantfactorial above, the compiler also
+turns them to tail-recursive form, but due the structure somewhat less efficient. if elegantfactorial was more complex, more advantage comes from tail-call structure function.
+*/
 void tailcall(uint64_t* result,uint64_t n){
 if(n==0)return;
 *result=(*result) *n;
