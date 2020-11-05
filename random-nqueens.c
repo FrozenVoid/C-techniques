@@ -18,7 +18,7 @@ size_t sum=0;
 for(size_t i=0;i<len;i++){int cur=board[i];
  for(size_t z=i+1;z<len;z++){int zqueen=board[z];
 sum+=(cur==zqueen);
-sum+=(tabs(z-i)==tabs(zqueen-cur));   }  }
+sum+=((z-i)==tabs(zqueen-cur));   }  }
 return sum;}
 
 //4- cell optimization++++++++++++++++++++++++++++++++++++++++++++
@@ -30,8 +30,8 @@ void optimize(int*board,size_t len){
 
 size_t metric=intersections(board,len),curmetric=1e9;
 if(!metric)return;//already solved board
-
-int maxcols=tmax(log2index(metric),4);
+int index=log2index(metric);
+ int maxcols=tmax(index,4);
 //if(defcols<8)defcols=len<8?len/2:8;
 
 /* queens 640  @16->to 3000 intersections:
@@ -51,6 +51,7 @@ if(!metric)return;//already solved
 
 uniquesetrand(trial,maxcols,0,len);//unique valss
 for(size_t i=0;i<maxcols;i++)board[rndcol[i]]=trial[i];//copy  trial to board[rndcol]
+
 curmetric=intersections(board,len);//check metric
 if(curmetric<metric){metric=curmetric; //new metric
 for(size_t i=0;i<maxcols;i++)optimal[i]=board[rndcol[i]];
