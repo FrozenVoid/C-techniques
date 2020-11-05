@@ -16,23 +16,22 @@ size_t intersections(int*board,size_t len){//optimization metric
 size_t sum=0;
 //check equal rows,diagonal
 for(size_t i=0;i<len;i++){int cur=board[i];
- for(size_t z=i+1;z<len;z++){
-sum+=(cur==board[z]);
-sum+=(abs(z-i)==abs(board[z]-cur));   }  }
+ for(size_t z=i+1;z<len;z++){int zqueen=board[z];
+sum+=(cur==zqueen);
+sum+=(tabs(z-i)==tabs(zqueen-cur));   }  }
 return sum;}
 
 //4- cell optimization++++++++++++++++++++++++++++++++++++++++++++
 
 uint64_t log2index(size_t X){return ((unsigned) (8*sizeof (unsigned long long) - __builtin_clzll((X)) ))      ;}
 
-#define tmin(x,y) ({typeof(x) tminx=x,tminy=y,res=tminy<tminx?tminy:tminx;      ;res;})
-#define tmax(x,y) ({typeof(x) tminx=x,tminy=y,res=tminy>tminx?tminy:tminx;      ;res;})
+
 void optimize(int*board,size_t len){
 
 size_t metric=intersections(board,len),curmetric=1e9;
 if(!metric)return;//already solved board
 
-int maxcols=tmax(log2index(metric),len<4?len:4);
+int maxcols=tmax(log2index(metric),4);
 //if(defcols<8)defcols=len<8?len/2:8;
 
 /* queens 640  @16->to 3000 intersections:
@@ -53,7 +52,6 @@ if(!metric)return;//already solved
 uniquesetrand(trial,maxcols,0,len);//unique valss
 for(size_t i=0;i<maxcols;i++)board[rndcol[i]]=trial[i];//copy  trial to board[rndcol]
 curmetric=intersections(board,len);//check metric
-
 if(curmetric<metric){metric=curmetric; //new metric
 for(size_t i=0;i<maxcols;i++)optimal[i]=board[rndcol[i]];
 
@@ -70,6 +68,7 @@ for(size_t i=0;i<maxcols;i++)board[rndcol[i]]=optimal[i];//copy  optimals to boa
 
 int main(int argc,char ** argv){
 size_t maxqueens=(argc>1)?numberof(argv[1]):8;
+if(maxqueens<4){dbgprint("error:Boardsize<4 not supported");return 2;}
 int* b=calloc(sizeof(int)*maxqueens,1);
 for(size_t i=0;i<maxqueens;i++)b[i]=i;//set row=column
 notoptimized:
