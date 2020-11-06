@@ -46,7 +46,7 @@ void optimize(int*board,size_t len,size_t mininter){
 
 size_t metric=intersections(board,len),curmetric=-1;
 int index=log2index(metric);size_t diagsum,linesum;
- int maxcols=tmin(tmax(index*index,4),len/2);int maxiter=1+(64/maxcols);//tmin(maxcols,1+metric);
+ int maxcols=tmin(tmax(index,2),len/2);int maxiter=1+(128/maxcols);//tmin(maxcols,1+metric);
 size_t rndcol[maxcols];int optimal[maxcols];size_t trial[maxcols];
 uniquesetrand(rndcol,maxcols,0,len);//create unique random cols
 for(size_t i=0;i<maxcols;i++)optimal[i]=board[rndcol[i]];
@@ -70,9 +70,9 @@ for(size_t i=0;i<maxcols;i++)board[rndcol[i]]=optimal[i];//copy  optimals to boa
 int main(int argc,char ** argv){
 size_t maxqueens=(argc>1)?numberof(argv[1]):8;
 size_t minintersect=(argc>2)?numberof(argv[2]):0;
-if(maxqueens<=4){dbgprint("\nError:Boardsize<=4 not supported\n");return 2;}
+if(maxqueens<4){dbgprint("\nError:Boardsize<4 not supported\n");return 2;}
 
 int* b=malloc(sizeof(int)*maxqueens);
-for(size_t i=0;i<maxqueens;i++)b[i]=i;//set row=column
+for(size_t i=0;i<maxqueens;i++)b[i]=rrange(0,maxqueens);//set row=column
 while(intersectionssum(b,maxqueens)>minintersect)optimize(b,maxqueens,minintersect);
 if(minintersect){dbgprint("\nReached",minintersect, "intersections of (diag|line) minimum");} else printboard(b,maxqueens);return 0;}
