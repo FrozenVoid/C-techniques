@@ -2,7 +2,7 @@
 /* compile with gcc -Ofast  queens.c -oqueens
 syntax: queens boardsize   [minintersect]
 minintersect minimal intersections for which the program will halt and print board(0==default)
-(The program isn't that optimized, searching for boardsizes >100000 not reccomended)
+(The program isn't that optimized, searching for boardsizes >10000 not reccomended)
 the optimizer will often get stuck at 1-3 intersections, this is normal due randomness
 */
 #include "Util/void.h"//https://github.com/FrozenVoid/C-headers
@@ -36,28 +36,31 @@ sum=tmax(linesum,diagsum);
 return sum;}
 
 //4- cell optimization++++++++++++++++++++++++++++++++++++++++++++
-
+#define intersectionssum(b,len) ({size_t diagsum=0,linesum=0;\
+intersections2(b,len,&diagsum,&linesum);\
+diagsum+linesum;})
 uint64_t log2index(size_t X){return ((unsigned) (63 - __builtin_clzll((X)) ))      ;}
 
 
-void optimize(int*board,size_t len){
+void optimize(int*board,size_t len,size_t mininter){
 
 size_t metric=intersections(board,len),curmetric=-1;
 int index=log2index(metric);size_t diagsum,linesum;
- int maxcols=tmax(index,4);int maxiter=tmin(maxcols,1+metric);
+ int maxcols=tmin(tmax(index*index,4),len/2);int maxiter=1+(64/maxcols);//tmin(maxcols,1+metric);
 size_t rndcol[maxcols];int optimal[maxcols];size_t trial[maxcols];
 uniquesetrand(rndcol,maxcols,0,len);//create unique random cols
 for(size_t i=0;i<maxcols;i++)optimal[i]=board[rndcol[i]];
 for(size_t i=0;i<maxiter;i++){
 uniquesetrand(trial,maxcols,0,len);//unique valss
 for(size_t i=0;i<maxcols;i++)board[rndcol[i]]=trial[i];//copy  trial to board[rndcol]
-
-curmetric=intersections(board,len);//check metric
+intersections2(board,len,&diagsum,&linesum);
+curmetric=tmax(diagsum,linesum);//check max metric diag/line
+//found new record
 if(curmetric<metric){metric=curmetric; //new metric
 for(size_t i=0;i<maxcols;i++)optimal[i]=board[rndcol[i]];
-intersections2(board,len,&diagsum,&linesum);
 char choice=diagsum>linesum;
-dbgprint("\nDiagonals:",choice?"[":" ",diagsum,choice?"]":" ","Lines:",!choice?"[":" ",linesum,!choice?"]":" "," Active Cols:",maxcols);
+dbgprint("\n#",i,"Diagonals:",choice?"[":" ",diagsum,choice?"]":" ","Lines:",!choice?"[":" ",linesum,!choice?"]":" ","Active Cols:",maxcols);
+if((diagsum+linesum)<mininter)break;
  }
 }
 for(size_t i=0;i<maxcols;i++)board[rndcol[i]]=optimal[i];//copy  optimals to board[rndcol]
@@ -71,5 +74,5 @@ if(maxqueens<=4){dbgprint("\nError:Boardsize<=4 not supported\n");return 2;}
 
 int* b=malloc(sizeof(int)*maxqueens);
 for(size_t i=0;i<maxqueens;i++)b[i]=i;//set row=column
-while(intersections(b,maxqueens)>minintersect)optimize(b,maxqueens);
+while(intersectionssum(b,maxqueens)>minintersect)optimize(b,maxqueens,minintersect);
 if(minintersect){dbgprint("\nReached",minintersect, "intersections of (diag|line) minimum");} else printboard(b,maxqueens);return 0;}
