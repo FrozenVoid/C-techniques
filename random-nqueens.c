@@ -9,7 +9,7 @@ the optimizer will often get stuck at 1-3 intersections, this is normal due rand
 
 void printboard(int* b,size_t len){puts("");
 for(size_t i=0;i<len;i++){
- for(size_t z=0;z<len;z++){ printf("%s",(z==b[i])?"Q":"X"); }puts(""); }}
+ for(size_t z=0;z<len;z++){ printf("%s",(z==b[i])?"Q":"⚹"); }puts(""); }}
 
 
 void intersections2(int*board,size_t len,size_t* diagsum,size_t* linesum){//optimization metric
@@ -46,7 +46,7 @@ void optimize(int*board,size_t len,size_t mininter){
 
 size_t metric=intersections(board,len),curmetric=-1;
 int index=log2index(metric);size_t diagsum,linesum;
- int maxcols=tmin(tmax(index,2),len/2);int maxiter=1+(128/maxcols);//tmin(maxcols,1+metric);
+ int maxcols=tmin(tmax(index,4),len/2);int maxiter=1+(128/maxcols);//tmin(maxcols,1+metric);
 size_t rndcol[maxcols];int optimal[maxcols];size_t trial[maxcols];
 uniquesetrand(rndcol,maxcols,0,len);//create unique random cols
 for(size_t i=0;i<maxcols;i++)optimal[i]=board[rndcol[i]];
