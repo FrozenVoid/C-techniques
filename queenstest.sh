@@ -1,6 +1,4 @@
-gcc -O3 -pipe -march=native -oqueens queens.c
-for (( c=0; c<=256; c++ ))
-do  
-  echo "Test size:"$c
-   time ./queens $c
-done
+#time large nqueens intersections search
+gcc -O3 -pipe -march=native  -oqueens queens.c
+  echo "Test size:64712 min " 100
+   time ./queens 64712 100
