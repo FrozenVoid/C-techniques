@@ -1,4 +1,8 @@
 #time large nqueens intersections search
-gcc -O3 -pipe -march=native  -oqueens queens.c
-  echo "Test size:64712 min " 100
-   time ./queens 64712 100
+gcc -Ofast queens.c -oqueens
+for (( c=1;c<10000;c++ ))
+do
+  echo "Test size board of side:$c  " 
+   time ./queens $c
+done
+
