@@ -1,0 +1,2 @@
+People writing smart code are often not smart enough to debug it.
+write simpler code. Optimization comes after.
