@@ -1,0 +1,3 @@
+To see what causes the error simplify the code until
+the error disappears and examine how error is added
+when you add the code back.
