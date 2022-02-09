@@ -6,7 +6,7 @@
 #define INTERSECT_DISP 1//1 seconds
 #define MS_CLOCK (CLOCKS_PER_SEC/1000)
 size_t last=0;//focus column(last intersect)
-clock_t startt,startt2,curt;
+clock_t startt,startt2;
 size_t diags(int*board,size_t len){//optimization metric
 size_t sum=0;
 for(size_t i=0;i<len;i++){int cur=board[i],zc=0;
@@ -21,27 +21,21 @@ void solve(int* q,int N){int temp;
 #define swapq(x,y) temp=x;x=y;y=temp;
 
 
-u64 cur=diags(q,N);
-u64 best=cur;int lswap=0;size_t A=4,B=3,C=1,D=2;
-while(cur){lswap=cur>N/8;//low intersect switch off
+u64 cur=diags(q,N),best=cur, A,B;
+while(cur){
 B=last;//force focus cell to swap queens
 do{A=randuint64()%N;}while(!(B^A));
-if(lswap){//same as A!=B
-do{C=randuint64()%N;}while(!((C^A)|(C^B)));
- do{ D=randuint64()%N;}while(!((D^A)|(D^B)|(D^C)));
- swapq(q[C],q[D]);//swap next cols
-}
 swapq(q[A],q[B]);
-cur=diags(q,N);
-;//count diagonal intersects
-
+cur=diags(q,N);//count diagonal intersects
 if(cur>best){ //revert if worse
-swapq(q[A],q[B]);
-if(lswap){swapq(q[C],q[D]);}
-continue;  }
+swapq(q[A],q[B]);continue;  }
+best=cur;//new record
+#if QDEBUG
+clock_t curt=clock();
+  if(curt-startt2> INTERSECT_DISP*CLOCKS_PER_SEC){
+  print("Time(s):",(curt-startt)/CLOCKS_PER_SEC,"Intersections:",cur,"\n");startt2=curt;}
+#endif
 
-best=cur;
-  if(QDEBUG && (clock()-startt2> INTERSECT_DISP*CLOCKS_PER_SEC)){print("Time(s):",(clock()-startt)/CLOCKS_PER_SEC,"Intersections:",cur,"\n");startt2=clock();}
 } //end loop
 }
 
