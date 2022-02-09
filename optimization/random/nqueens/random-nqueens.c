@@ -24,7 +24,7 @@ uint64_t log2index(size_t X){return ((unsigned) (63 - __builtin_clzll((X)) ))   
 
 void optimize(int*board,size_t len,size_t mininter){
 size_t metric=intersections(board,len),curmetric=-1;
-const int maxcols=tmin(log2index(metric),len/2);
+const int maxcols=tmin(log2index(metric),4);
 const int maxiter=1+(128/maxcols);// int maxcols=tmin(tmax(index,8),len);int maxiter=1+(128/maxcols);//tmin(maxcols,1+metric);
 size_t rndcol[maxcols];int optimal[maxcols];size_t trial[maxcols];
 uniquesetrand(rndcol,maxcols,0,len);//create unique random cols
@@ -35,7 +35,7 @@ for(size_t i=0;i<maxcols;i++)board[rndcol[i]]=trial[i];//copy  trial to board[rn
 curmetric=intersections(board,len);
 if(curmetric<metric){metric=curmetric; //new metric
 for(size_t i=0;i<maxcols;i++)optimal[i]=board[rndcol[i]];
-dbgprint("\nClock:",clock(),"Intersections:" ,metric,"Active Cols:",maxcols);
+dbgprint("\nClock(s):",clock()/CLOCKS_PER_SEC,"Intersections:" ,metric,"Active Cols:",maxcols);
 if(metric<mininter)break;
  }
 }
