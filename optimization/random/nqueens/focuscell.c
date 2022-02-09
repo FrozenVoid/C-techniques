@@ -2,6 +2,7 @@
 
 //fast N Queens "focus cell" solver
 
+//faster with QDEBUG==1
 #define QDEBUG 1//print intersect count each INTERSECT_DISP seconds
 #define INTERSECT_DISP 1//1 seconds
 #define MS_CLOCK (CLOCKS_PER_SEC/1000)
