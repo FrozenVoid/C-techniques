@@ -9,15 +9,20 @@ size_t last=0;//focus column(last intersect)
 clock_t startt,startt2,curt;
 size_t diags(int*board,size_t len){//optimization metric
 size_t sum=0;
-for(size_t i=0;i<len;i++){int cur=board[i];
- for(size_t z=i+1;z<len;z++){int zqueen=board[z];
- if(((z-i)==tabs(zqueen-cur))){last=z;sum++; };   }  }
+for(size_t i=0;i<len;i++){int cur=board[i],zc=0;
+ for(size_t z=i+1;z<len&&zc<2;z++){int zqueen=board[z];
+ if(((z-i)==tabs(zqueen-cur))){last=z;zc++;sum++; };   }  }
 return sum;}
+
+
 
 
 void solve(int* q,int N){int temp;
 #define swapq(x,y) temp=x;x=y;y=temp;
-u64 cur=diags(q,N),best=cur;int lswap=0;size_t A=4,B=3,C=1,D=2;
+
+
+u64 cur=diags(q,N);
+u64 best=cur;int lswap=0;size_t A=4,B=3,C=1,D=2;
 while(cur){lswap=cur>N/8;//low intersect switch off
 B=last;//force focus cell to swap queens
 do{A=randuint64()%N;}while(!(B^A));
@@ -27,8 +32,8 @@ do{C=randuint64()%N;}while(!((C^A)|(C^B)));
  swapq(q[C],q[D]);//swap next cols
 }
 swapq(q[A],q[B]);
-
-cur=diags(q,N);//count diagonal intersects
+cur=diags(q,N);
+;//count diagonal intersects
 
 if(cur>best){ //revert if worse
 swapq(q[A],q[B]);
