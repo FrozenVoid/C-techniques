@@ -11,7 +11,7 @@ size_t diags(int*board,size_t len){//optimization metric
 size_t sum=0;
 for(size_t i=0;i<len;i++){int cur=board[i];
  for(size_t z=i+1;z<len;z++){int zqueen=board[z];
- if(((z-i)==tabs(zqueen-cur))){last=z;sum++;break;};   }  }
+ if(((z-i)==tabs(zqueen-cur))){last=z;sum++; };   }  }
 return sum;}
 
 
@@ -21,7 +21,7 @@ u64 cur=diags(q,N),best=cur;int lswap=0;size_t A=4,B=3,C=1,D=2;
 while(cur){lswap=cur>N/8;//low intersect switch off
 B=last;//force focus cell to swap queens
 do{A=randuint64()%N;}while(!(B^A));
-if(lswap){
+if(lswap){//same as A!=B
 do{C=randuint64()%N;}while(!((C^A)|(C^B)));
  do{ D=randuint64()%N;}while(!((D^A)|(D^B)|(D^C)));
  swapq(q[C],q[D]);//swap next cols
