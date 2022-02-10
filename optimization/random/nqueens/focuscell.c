@@ -6,7 +6,11 @@
 #define PRINT_RESULT_MAX 5000//don't print result row positions if Board is above PRINT_RESULT_MAX
 #define INTERSECT_DISP 5//1 seconds
 #define MS_CLOCK (CLOCKS_PER_SEC/1000)
+#define MIN_SIDE 8//minimal board width
 size_t last=0,fst=0;//focus column(last intersect)
+#if QDEBUG
+i64 swapt=0;//valid swaps total
+#endif
 clock_t startt,startt2;
 size_t diags(int*board,size_t len){//optimization metric
 size_t sum=0;
@@ -32,25 +36,30 @@ return len;}
 void psolve(int* q,int N){int temp;
 #define swapq(x,y) temp=x;x=y;y=temp;
 u64 limlq=N;//lower limit for queen swap fails
-u64 cur,lastq=0, A,B;
+u64 cur,lastq=0, A,B,edge=N/256;
 while(firstq1(q,N)<N && lastq<limlq){
-//if gap is too small, swap the first cell to enlarge it
-B=(last>fst*3/2)?last:fst;//force focus cell to swap queens(fst,last update from firstq1())
-if(N<64)B=randuint64()%N;//fix small boards intersect
+B=(last<fst+edge)?fst:last;//force focus cell to swap queens(fst,last update from firstq1())
+if(MIN_SIDE<8 && N<8)B=randuint64()%N;//fix small boards intersect
 do{A=randuint64()%N;
 }while(A==B );
+#if QDEBUG
+swapt++;//valid swaps total
+#endif
 swapq(q[A],q[B]);//swap random with focused cell
 cur=fst;//store fst(i) in cur, overwritten by firstq1
 ;//find first intersect source, check if below fst(i)
 if(firstq1(q,N)<cur){lastq++; //revert if worse
 swapq(q[A],q[B]);
+#if QDEBUG
+swapt--;//valid swaps revert
+#endif
 continue;  }
 lastq=0;//reset count of #last failed queen swaps.
 //new record
 #if QDEBUG
 clock_t curt=clock(); //display first filled column
   if(curt-startt2> INTERSECT_DISP*CLOCKS_PER_SEC){
-  print("Time(s):",(curt-startt)/CLOCKS_PER_SEC,"Partial:(",fst,",",last,")/",N,"\n");startt2=curt;}
+  print("Time(s):",(curt-startt)/CLOCKS_PER_SEC,"Partial:(",fst,",",last,")/",N," VSwaps:",swapt,"\n");startt2=curt;}
 #else
 fflush(stdout);//fix low priority assigned if no output
 #endif
@@ -69,21 +78,27 @@ psolve(q,N);
 
 u64 cur=diags(q,N),best=cur, A,B;
 #if QDEBUG
-if(cur){print(N," is partially solved to:",cur," intersections\n");}
+if(cur){print(N," is partially solved to:",cur," intersections and ",swapt,"swaps\n");}
 #endif
 while(cur){
 B=randuint64()&1?last:fst;
 do{A=randuint64()%N;}while(A==B);
 swapq(q[A],q[B]);
+#if QDEBUG
+swapt++;//valid swaps total
+#endif
 cur=diags(q,N);//count diagonal intersects
 if(cur>best){ //revert if worse
+#if QDEBUG
+ swapt--;//valid swaps revert
+#endif
 swapq(q[A],q[B]);continue;  }
 best=cur;
 //new record
 #if QDEBUG
 clock_t curt=clock();
   if(curt-startt2> INTERSECT_DISP*CLOCKS_PER_SEC){
-  print("Time(s):",(curt-startt)/CLOCKS_PER_SEC,"Intersections:",cur,"\n");startt2=curt;}
+  print("Time(s):",(curt-startt)/CLOCKS_PER_SEC,"Intersections:",cur,"VSwaps:",swapt,"\n");startt2=curt;}
 #else
 fflush(stdout);//fix low priority;
 #endif
@@ -93,13 +108,13 @@ fflush(stdout);//fix low priority;
 
 
 int main(int argc,char**argv){startt=clock();startt2=startt;
-if(argc!=2){syntax:;puts("Syntax:nq N\n N=Board size(4+)");exit(1);}
-int N=atoi(argv[1]);if(N<4)goto syntax;
+if(argc!=2){syntax:;puts("Syntax:nq N\n N=Board size min=" stringify(MIN_SIDE) " >3");exit(1);}
+int N=atoi(argv[1]);if(N<MIN_SIDE||N<4)goto syntax;
 int* q=malloc(sizeof(int)*N);//queen row/cols(2^31-1 max)
 if(!q){perror("Queen array size too large");exit(2);}
 for(int i=0;i<N;i++)q[i]=i;//unique rows/cols to swap.
 ;solve(q,N);startt2=clock();
 if(PRINT_RESULT_MAX>N){for(int i=0;i<N;i++)printf("%d,",q[i]+1);}
-print("\nSolution found in:",(startt2-startt)/MS_CLOCK," milliseconds\n");
+print("\nSolution found in:",(startt2-startt)/MS_CLOCK," milliseconds",swapt,"swaps\n");
 
 return 0;}
