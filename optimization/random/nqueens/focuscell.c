@@ -3,7 +3,7 @@
 //fast N Queens "focus cell" solver
 
 #define QDEBUG 1//print intersect count each INTERSECT_DISP seconds
-#define PRINT_RESULT_MAX 5000//don't print result row positions if Board is above PRINT_RESULT_MAX
+#define PRINT_RESULT_MAX 50//don't print result row positions if Board is above PRINT_RESULT_MAX
 #define INTERSECT_DISP 10//1 seconds
 #define MS_CLOCK (CLOCKS_PER_SEC/1000)
 size_t last=0,fst=0;//focus column(last intersect)
@@ -12,7 +12,7 @@ size_t diags(int*board,size_t len){//optimization metric
 size_t sum=0;
 for(size_t i=0;i<len;i++){size_t cur=board[i],zc=0;
  for(size_t z=i+1;z<len&&zc<2;z++){size_t zqueen=board[z];
- if(((z-i)==tabs(zqueen-cur))){fst=i;last=z;zc++;sum++; };   }  }
+ if(((z-i)==(zqueen-cur))||((z-i)==(cur-zqueen))){fst=i;last=z;zc++;sum++; };   }  }
 return sum;}
 
 uint64_t log2index(size_t X){return ((unsigned) (63 - __builtin_clzll((X)) ))      ;}
@@ -23,7 +23,7 @@ for( i=0;i<len;i++){
  size_t cur=board[i];
  for( z=i+1;z<len;z++){
  size_t zqueen=board[z];
-  if(((z-i)==tabs(zqueen-cur))){
+  if(((z-i)==(zqueen-cur))||((z-i)==(cur-zqueen))){
  fst=i;
  last=z;
  return i; };   }  }
@@ -34,7 +34,7 @@ void psolve(int* q,int N){int temp;
 #define swapq(x,y) temp=x;x=y;y=temp;
 u64 limlq=N*16;//1280/log2index(N);
 u64 cur,lastq=0, A,B;
-while(firstq1(q,N)<(N-2) && lastq<limlq){
+while(firstq1(q,N)<N && lastq<limlq){
 B=randuint64()&1?last:fst;//force focus cell to swap queens
 
 do{A=randuint64()%N;
@@ -67,7 +67,11 @@ void solve(int* q,int N){int temp;
 #define swapq(x,y) temp=x;x=y;y=temp;
 
 psolve(q,N);
+
 u64 cur=diags(q,N),best=cur, A,B;
+#if QDEBUG
+print("Partially solved to:",cur," intersections\n");
+#endif
 while(cur){
 B=randuint64()&1?last:fst;
 do{A=randuint64()%N;}while(A==B);
