@@ -3,8 +3,8 @@
 //fast N Queens "focus cell" solver
 
 #define QDEBUG 1//print intersect count each INTERSECT_DISP seconds
-#define PRINT_RESULT_MAX 50//don't print result row positions if Board is above PRINT_RESULT_MAX
-#define INTERSECT_DISP 10//1 seconds
+#define PRINT_RESULT_MAX 5000//don't print result row positions if Board is above PRINT_RESULT_MAX
+#define INTERSECT_DISP 5//1 seconds
 #define MS_CLOCK (CLOCKS_PER_SEC/1000)
 size_t last=0,fst=0;//focus column(last intersect)
 clock_t startt,startt2;
@@ -36,7 +36,7 @@ u64 limlq=N*16;//1280/log2index(N);
 u64 cur,lastq=0, A,B;
 while(firstq1(q,N)<N && lastq<limlq){
 B=randuint64()&1?last:fst;//force focus cell to swap queens
-
+if(N<64)B=randuint64()%N;
 do{A=randuint64()%N;
 }while(A==B );
 swapq(q[A],q[B]);
@@ -70,7 +70,7 @@ psolve(q,N);
 
 u64 cur=diags(q,N),best=cur, A,B;
 #if QDEBUG
-print("Partially solved to:",cur," intersections\n");
+if(cur){print(N," is partially solved to:",cur," intersections\n");}
 #endif
 while(cur){
 B=randuint64()&1?last:fst;
