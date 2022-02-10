@@ -18,42 +18,39 @@ return sum;}
 uint64_t log2index(size_t X){return ((unsigned) (63 - __builtin_clzll((X)) ))      ;}
 
 size_t firstq1(int*board,size_t len){//first intersect
-size_t i,z;
-for( i=0;i<len;i++){
+for(size_t i=0;i<len;i++){
  size_t cur=board[i];
- for( z=i+1;z<len;z++){
- size_t zqueen=board[z];
-  if(((z-i)==(zqueen-cur))||((z-i)==(cur-zqueen))){
- fst=i;
- last=z;
- return i; };   }  }
+ for(size_t z=i+1;
+ z!=len;
+ z++){
+  if(((z-i)^(board[z]-cur))&& (z-i)^(cur-board[z])  )continue;
+ fst=i; last=z; return i; ;   }  }
 return len;}
 
-//presolve positions
+//partially solve by 1st intersect(firstq1)
 void psolve(int* q,int N){int temp;
 #define swapq(x,y) temp=x;x=y;y=temp;
-u64 limlq=N*16;//1280/log2index(N);
+u64 limlq=N;//lower limit for queen swap fails
 u64 cur,lastq=0, A,B;
 while(firstq1(q,N)<N && lastq<limlq){
-B=randuint64()&1?last:fst;//force focus cell to swap queens
-if(N<64)B=randuint64()%N;
+B=randuint64()&1?last:fst;//force focus cell to swap queens(fst,last update from firstq1())
+if(N<64)B=randuint64()%N;//fix small boards intersect
 do{A=randuint64()%N;
 }while(A==B );
-swapq(q[A],q[B]);
-
-cur=fst;
-;//count diagonal intersects
+swapq(q[A],q[B]);//swap random with focused cell
+cur=fst;//store fst(i) in cur, overwritten by firstq1
+;//find first intersect source, check if below fst(i)
 if(firstq1(q,N)<cur){lastq++; //revert if worse
 swapq(q[A],q[B]);
 continue;  }
-lastq=0;
+lastq=0;//reset count of #last failed queen swaps.
 //new record
 #if QDEBUG
 clock_t curt=clock(); //display first filled column
   if(curt-startt2> INTERSECT_DISP*CLOCKS_PER_SEC){
   print("Time(s):",(curt-startt)/CLOCKS_PER_SEC,"Partial:",fst,"/",N,"\n");startt2=curt;}
 #else
-fflush(stdout);//fix low priority;
+fflush(stdout);//fix low priority assigned if no output
 #endif
 
 } //end loop
@@ -75,8 +72,6 @@ if(cur){print(N," is partially solved to:",cur," intersections\n");}
 while(cur){
 B=randuint64()&1?last:fst;
 do{A=randuint64()%N;}while(A==B);
-
-
 swapq(q[A],q[B]);
 cur=diags(q,N);//count diagonal intersects
 if(cur>best){ //revert if worse
