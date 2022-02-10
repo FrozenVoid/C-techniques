@@ -97,7 +97,7 @@ int N=atoi(argv[1]);if(N<4)goto syntax;
 int* q=malloc(sizeof(int)*N);//queen row/cols(2^31-1 max)
 if(!q){perror("Queen array size too large");exit(2);}
 for(int i=0;i<N;i++)q[i]=i;//unique rows/cols to swap.
-;psolve(q,N);startt2=clock();
+;solve(q,N);startt2=clock();
 if(PRINT_RESULT_MAX>N){for(int i=0;i<N;i++)printf("%d,",q[i]+1);}
 print("\nSolution found in:",(startt2-startt)/MS_CLOCK," milliseconds\n");
 
