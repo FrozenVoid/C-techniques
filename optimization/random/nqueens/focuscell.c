@@ -11,7 +11,8 @@ clock_t startt,startt2;
 size_t diags(int*board,size_t len){//optimization metric
 size_t sum=0;
 for(size_t i=0;i<len;i++){size_t cur=board[i],zc=0;
- for(size_t z=i+1;z<len&&zc<2;z++){size_t zqueen=board[z];
+ for(size_t z=i+1;z<len&&zc<2;z++){
+  size_t zqueen=board[z];
  if(((z-i)==(zqueen-cur))||((z-i)==(cur-zqueen))){fst=i;last=z;zc++;sum++; };   }  }
 return sum;}
 
@@ -33,7 +34,8 @@ void psolve(int* q,int N){int temp;
 u64 limlq=N;//lower limit for queen swap fails
 u64 cur,lastq=0, A,B;
 while(firstq1(q,N)<N && lastq<limlq){
-B=randuint64()&1?last:fst;//force focus cell to swap queens(fst,last update from firstq1())
+//if gap is too small, swap the first cell to enlarge it
+B=(last>fst*3/2)?last:fst;//force focus cell to swap queens(fst,last update from firstq1())
 if(N<64)B=randuint64()%N;//fix small boards intersect
 do{A=randuint64()%N;
 }while(A==B );
@@ -48,7 +50,7 @@ lastq=0;//reset count of #last failed queen swaps.
 #if QDEBUG
 clock_t curt=clock(); //display first filled column
   if(curt-startt2> INTERSECT_DISP*CLOCKS_PER_SEC){
-  print("Time(s):",(curt-startt)/CLOCKS_PER_SEC,"Partial:",fst,"/",N,"\n");startt2=curt;}
+  print("Time(s):",(curt-startt)/CLOCKS_PER_SEC,"Partial:(",fst,",",last,")/",N,"\n");startt2=curt;}
 #else
 fflush(stdout);//fix low priority assigned if no output
 #endif
