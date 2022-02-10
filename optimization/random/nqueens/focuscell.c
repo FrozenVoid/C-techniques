@@ -2,7 +2,7 @@
 
 //fast N Queens "focus cell" solver
 
-#define QDEBUG 0//print swaps/intersect count each INTERSECT_DISP seconds
+#define QDEBUG 1//print swaps/intersect count each INTERSECT_DISP seconds
 #define PRINT_RESULT_MAX 5000//don't print result row positions if Board is above PRINT_RESULT_MAX
 #define INTERSECT_DISP 5//1 seconds
 #define MS_CLOCK (CLOCKS_PER_SEC/1000)
@@ -73,10 +73,14 @@ fflush(stdout);//fix low priority assigned if no output
 
 void solve(int* q,int N){int temp;
 #define swapq(x,y) temp=x;x=y;y=temp;
+u64 A,B;
 
+if(N>2000){//scrambke diagonal for large boards
+for(size_t i=0;i<(N);i+=1){swapq(q[i],q[randuint64()%N]);}
+}
 psolve(q,N);
 
-u64 cur=diags(q,N),best=cur, A,B;
+u64 cur=diags(q,N),best=cur;
 #if QDEBUG
 if(cur){print(N," is partially solved to:",cur," intersections and ",swapt,"swaps\n");}
 #endif
@@ -110,7 +114,7 @@ fflush(stdout);//fix low priority;
 int main(int argc,char**argv){startt=clock();startt2=startt;
 if(argc!=2){syntax:;puts("Syntax:nq N\n N=Board size min=" stringify(MIN_SIDE) " >3");exit(1);}
 int N=atoi(argv[1]);if(N<MIN_SIDE||N<4)goto syntax;
-int* q=malloc(sizeof(int)*N);//queen row/cols(2^31-1 max)
+int* q=calloc(sizeof(int),N);//queen row/cols(2^31-1 max)
 if(!q){perror("Queen array size too large");exit(2);}
 for(int i=0;i<N;i++)q[i]=i;//unique rows/cols to swap.
 ;solve(q,N);startt2=clock();
