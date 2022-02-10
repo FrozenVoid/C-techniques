@@ -2,15 +2,15 @@
 
 //fast N Queens "focus cell" solver
 
-#define QDEBUG 1//print intersect count each INTERSECT_DISP seconds
+#define QDEBUG 0//print swaps/intersect count each INTERSECT_DISP seconds
 #define PRINT_RESULT_MAX 5000//don't print result row positions if Board is above PRINT_RESULT_MAX
 #define INTERSECT_DISP 5//1 seconds
 #define MS_CLOCK (CLOCKS_PER_SEC/1000)
 #define MIN_SIDE 8//minimal board width
 size_t last=0,fst=0;//focus column(last intersect)
-#if QDEBUG
-i64 swapt=0;//valid swaps total
-#endif
+
+i64 swapt=0;//valid swaps total(set if QDEBUG enabled)
+
 clock_t startt,startt2;
 size_t diags(int*board,size_t len){//optimization metric
 size_t sum=0;
