@@ -29,12 +29,16 @@ size_t fstcols(int* board,size_t len){
 for(size_t i=0;i<len;i++){diag[i]=0;}
 for(size_t i=0;i<len;i++){
 int r=board[i]-i;//rowcol
-size_t diagl=r<0?r+len-1:r;diag[diagl]++;
+size_t diagl=r<0?r+len:r;
+
+diag[diagl]++;
 if(diag[diagl]>1)return i;}
 for(size_t i=0;i<len;i++){;diag[i]=0;}
 for(size_t i=0;i<len;i++){
 int r=board[i]+(len-i-1);//rowcol
-size_t diagr=r>len-1?r-(len-1):r;diag[diagr]++;
+size_t diagr=r>=len?r-(len):r;
+
+diag[diagr]++;
 if(diag[diagr]>1)return i;}
 
 return len;
@@ -45,7 +49,7 @@ size_t sum=0,maxi=0;//most collided col.
 for(size_t i=0;i<len;i++){diag[i]=0;}
 for(size_t i=0;i<len;i++){
 int r=board[i]-i;//rowcol
-size_t diagl=r<0?r+len-1:r;
+size_t diagl=r<0?r+len:r;
 diag[diagl]++;}
 for(size_t i=0;i<len;i++){
 if(diag[i]>sum){sum=diag[i];maxi=i;}
@@ -53,7 +57,7 @@ if(diag[i]>sum){sum=diag[i];maxi=i;}
 for(size_t i=0;i<len;i++){diag[i]=0;}
 for(size_t i=0;i<len;i++){
 int r=board[i]+(len-i-1);//rowcol
-size_t diagr=r>len-1?r-(len-1):r;
+size_t diagr=r>=len?r-(len):r;
 diag[diagr]++;}
 for(size_t i=0;i<len;i++){
 if(diag[i]>sum){sum=diag[i];maxi=i;}
@@ -66,15 +70,15 @@ size_t sum=0;//count double occupied diagonals
 for(size_t i=0;i<len;i++){diag[i]=0;}
 for(size_t i=0;i<len;i++){
 int r=board[i]-i;//rowcol
-size_t diagl=r<0?r+len-1:r;
+size_t diagl=r<0?r+len:r;
 diag[diagl]++;}
 for(size_t i=0;i<len;i++){
-sum+=diag[i]>1?diag[i]-1:0;diag[i]=0;}
+sum+=diag[i]==0;diag[i]=0;}
 for(size_t i=0;i<len;i++){
-int r=board[i]+(len-i-1);//rowcol
-size_t diagr=r>len-1?r-(len-1):r;
+int r=board[i]+i;//rowcol
+size_t diagr=r>=len?r-(len):r;
 diag[diagr]++;}
-for(size_t i=0;i<len;i++){sum+=diag[i]>1?diag[i]-1:0;diag[i]=0;}
+for(size_t i=0;i<len;i++){sum+=diag[i]==0;diag[i]=0;}
 return sum;
 }
 size_t firstq2(int*board,size_t len){//first intersect
@@ -148,7 +152,7 @@ fflush(stdout);//fix low priority assigned if no output
 void dsolve(int* q,int N){int temp;
 #define swapq(x,y) temp=x;x=y;y=temp;
 u64 A,B;size_t fail=0;
-u64 limf=N*N+1023;
+u64 limf=N*16+1000;
 u64 cur=countudiag(q,N),best=cur,udiag=0,ucur=0;
 #if QDEBUG
 //printboard(q,N);
@@ -157,7 +161,7 @@ print("Starting diagonal solver:",mstime()," ms",cur,"intersections\n");
 #endif
 while(cur){//fst=firstq1(q,N);
 B=fstcols(q,N);
-
+if(cur==udiag)B=mostcols2(q,N);
 A=randuint64()%N;while(A==B)A=randuint64()%N;
 
 //if(cur!=udiag )B=mostcols(q,N);//stuck
@@ -176,7 +180,7 @@ if(cur>udiag){swapq(q[A],q[B]);
 #endif
 }
 continue; }
-fail=0;size_t fff;
+fail=0;
 
 #if QDEBUG
 
