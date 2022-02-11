@@ -148,7 +148,7 @@ fflush(stdout);//fix low priority assigned if no output
 void dsolve(int* q,int N){int temp;
 #define swapq(x,y) temp=x;x=y;y=temp;
 u64 A,B;size_t fail=0;
-u64 limf=N*16+1023;
+u64 limf=N*N+1023;
 u64 cur=countudiag(q,N),best=cur,udiag=0,ucur=0;
 #if QDEBUG
 //printboard(q,N);
@@ -169,11 +169,13 @@ swapq(q[A],q[B]);
 swapt++;//valid swaps total
 #endif
 cur=countudiag(q,N);//count diagonal intersects
-if(cur>udiag){if(fail++>limf)break;//revert if worse
+if(cur>=udiag){if(fail++>limf)break;//revert if worse
+if(cur>udiag){swapq(q[A],q[B]);
 #if QDEBUG
  swapt--;//valid swaps revert
 #endif
-swapq(q[A],q[B]);continue; }
+}
+continue; }
 fail=0;size_t fff;
 
 #if QDEBUG
