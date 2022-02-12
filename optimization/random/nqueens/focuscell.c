@@ -14,12 +14,19 @@ clock_t nxt=0;
 
 
 void printboard(int*q,size_t N){print("\n");for(int i=0;i<N;i++)printf("%d,",q[i]+1);}
-size_t diags(int*board,size_t len){//optimization metric
+size_t diags(int*board,size_t len,size_t early){//optimization metric
 size_t sum=0;
-for(size_t i=0;i<len;i++){size_t cur=board[i],zc=0;
+
+if(early&& len>64){//skip >early sum overflow
+for(size_t i=0;i<len;i++){size_t cur=board[i],zc=0;if(sum>early)return sum;
  for(size_t z=i+1;z<len&&zc<2;z++){
   size_t zqueen=board[z];
  if(((z-i)==(zqueen-cur))||((z-i)==(cur-zqueen))){fst=i;last=z;zc++;sum++; };   }  }
+}else{
+for(size_t i=0;i<len;i++){size_t cur=board[i];
+ for(size_t z=i+1;z<len;z++){
+  size_t zqueen=board[z];
+ if(((z-i)==(zqueen-cur))||((z-i)==(cur-zqueen))){fst=i;last=z;sum++; };   }  }}
 return sum;}
 
 uint64_t log2index(size_t X){return ((unsigned) (63 - __builtin_clzll((X)) ))      ;}
@@ -328,15 +335,19 @@ if(N>1024){fdsolve(q,N);dsolve(q,N);}
 if(N<1025)psolve(q,N);
 
 
-
-u64 cur=diags(q,N),best=cur,udiag=0,ucur=0;
+size_t fail=0; const int smallboard=N<9;
+if(smallboard)psolve(q,N);
+//u64 cur=countudiag(q,N);
+u64 cur=diags(q,N,0);
+u64 best=cur,udiag=0,ucur=0;
 #if QDEBUG
 if(cur){print(N," is partially solved to:",cur," intersections and ",swapt,"swaps;",mstime(),"ms\n");}
 #endif
 while(cur){
 u64 rnd1=randuint64();
 firstq1(q,N);
-B=rnd1&1?last:fst;
+//size_t bcol=mostcols2(q,N);
+B=rnd1&1?last:rnd1%N;
 
 
 A=randuint64()%N;
@@ -348,19 +359,24 @@ swapq(q[A],q[B]);
 #if QDEBUG
 swapt++;//valid swaps total
 #endif
-cur=diags(q,N);//count diagonal intersects
+//cur=countudiag(q,N);
+cur=diags(q,N,best);//count diagonal intersects
 
 if(cur>best){ //revert if worse
+
+if(cur>best){
 #if QDEBUG
  swapt--;//valid swaps revert
 #endif
-swapq(q[A],q[B]);continue;  }
+fail++;
+swapq(q[A],q[B]);}
+continue;  }
 
 //new record
 #if QDEBUG
 
   if(clock()-nxt>INTERSECT_DISP*CLOCKS_PER_SEC){
-  print("solve:",mstime(),"ms Intersections:",cur,"/",N,"VSwaps:",swapt,"\n");
+  print("solve:",mstime(),"ms Intersections:",cur,"/",N,"VSwaps:",swapt,"Fail:",fail,"\n");if(N<64)printboard(q,N);puts("");
 nxt=clock();
   }
 
@@ -368,7 +384,7 @@ nxt=clock();
 #else
 fflush(stdout);//fix low priority;
 #endif
-best=cur;
+best=cur;fail=0;
 } //end loop
 }
 
