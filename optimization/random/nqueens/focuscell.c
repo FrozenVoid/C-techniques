@@ -3,7 +3,7 @@
 //fast N Queens "focus cell" solver
 #define mstime() ((clock())/(CLOCKS_PER_SEC/1000))
 #define QDEBUG 1//print swaps/intersect count each INTERSECT_DISP seconds
-#define INTERSECT_DISP 10//1 seconds
+#define INTERSECT_DISP 3//1 seconds
 #define MS_CLOCK (CLOCKS_PER_SEC/1000)
 #define MIN_SIDE 4//minimal board width
 size_t last=0,fst=0;//focus column(last intersect)
@@ -220,8 +220,19 @@ u64 A,B;size_t fail=0;
 u64 limf=N*16;
 u64 limf2=N/4;
 u64 limf3=N/16;
+size_t scramble=512/log2index(N);
 u64 limf4=N/32;
-size_t tdiag;
+#if QDEBUG
+//printboard(q,N);
+ //tdiag=diags(q,N);
+print("Scramble*=",scramble,"\n");
+#endif
+//scramble diagonals
+for(int z=0;z<scramble;z++){
+for(size_t i=0;i<N;i++){
+size_t rcol=randuint64()%N;
+swapq(q[i],q[rcol]);
+}}
 u64 cur=fstcols(q,N),best=cur,udiag=0,ucur=0;
 
 #if QDEBUG
@@ -232,7 +243,7 @@ print("Starting fdsolve solver:",mstime()," ms",N-cur,"intersections\n");
 while(best<N ){//fst=firstq1(q,N);
 fst=fstcols(q,N);
 B=fst;
-if(cur==best){B=mostcols2(q,N);}
+//if(cur==best){B=mostcols2(q,N);}
 //if(cur!=best)B=randuint64()%N;else{B=fstcols(q,N);}
 //if(cur<5){firstq1(q,N);B=randuint64()&1?last:fst;}
 A=randuint64()%N;while(A==B)A=randuint64()%N;
@@ -254,16 +265,22 @@ if(cur<fst){swapq(q[A],q[B]);}
 #endif
 if(fail++>(N-best)*limf4)break;//revert if worse
 continue; }
-fail=0;best=cur;
+//if(!once){print("\n best,cur,fst,A,B,fail",best,cur,fst,A,B,fail);}
+
 
 #if QDEBUG
+
+
  //tdiag=diags(q,N);
   if(clock()-nxt>INTERSECT_DISP*CLOCKS_PER_SEC ){
-  print("fdsolve:",mstime(),"ms Solved%:",((best*100.0)/N),"VSwaps:",swapt,"\n");nxt=clock();}
+  //print("\n best=",best,"cur=",cur,"fst=",fst,"A=",A,"B=",B,"fail=",fail);
+  print("\nfdsolve:",mstime(),"ms Solved%:",((best*100.0)/N),"VSwaps:",swapt);nxt=clock();}
+
+
 #else
 fflush(stdout);//fix low priority;
 #endif
-
+fail=0;best=cur;
 } //end loop
 
  print("fdsolve:",mstime(),"ms Distance:",N-best,"VSwaps:",swapt,"fails",fail,"\n");
