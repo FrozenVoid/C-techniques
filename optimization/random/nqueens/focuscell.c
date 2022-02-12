@@ -146,7 +146,7 @@ lastq=0;//reset count of #last failed queen swaps.
 #if QDEBUG
 
   if(clock()-nxt>INTERSECT_DISP*CLOCKS_PER_SEC){
-  print("psolve:",mstime(),"ms Partial:(",res,",",last,")/",N," VSwaps:",swapt,"QCalls:",calls,"\n");nxt=clock();;}
+  print("psolve:",mstime(),"ms Solved%:",res*100.0/N," VSwaps:",swapt,"QCalls:",calls,"\n");nxt=clock();;}
 #else
 fflush(stdout);//fix low priority assigned if no output
 #endif
@@ -259,7 +259,7 @@ fail=0;best=cur;
 #if QDEBUG
  //tdiag=diags(q,N);
   if(clock()-nxt>INTERSECT_DISP*CLOCKS_PER_SEC ){
-  print("fdsolve:",mstime(),"ms Distance:",N-best,"VSwaps:",swapt,"\n");nxt=clock();}
+  print("fdsolve:",mstime(),"ms Solved%:",((best*100.0)/N),"VSwaps:",swapt,"\n");nxt=clock();}
 #else
 fflush(stdout);//fix low priority;
 #endif
@@ -275,12 +275,6 @@ void solve(int* q,int N){int temp;
 #define swapq(x,y) temp=x;x=y;y=temp;
 u64 A,B;
 
-if(N>2000){//scrambke diagonal for large boards
-for(int z=0;z<4;z++){
-for(size_t i=0;i<(N);i+=1){size_t sB=randuint64()%N;
-swapq(q[i],q[sB]);}}
-
-}
 
 #if QDEBUG
 
@@ -322,7 +316,7 @@ swapq(q[A],q[B]);continue;  }
 #if QDEBUG
 
   if(clock()-nxt>INTERSECT_DISP*CLOCKS_PER_SEC){
-  print("solve:",mstime(),"ms Intersections:",cur,"VSwaps:",swapt,"\n");
+  print("solve:",mstime(),"ms Intersections:",cur,"/",N,"VSwaps:",swapt,"\n");
 nxt=clock();
   }
 
