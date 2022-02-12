@@ -13,7 +13,7 @@ u64 calls=0,rndtime=0,cti;
 clock_t nxt=0;
 
 
-void printboard(int*q,size_t N){print("\n");for(int i=0;i<N;i++)printf("%d,",q[i]+1);}
+void printboard(int*q,size_t N){print("\n");for(int i=0;i<N;i++)printf("%d,",q[i]);}
 size_t diags(int*board,size_t len,size_t early){//optimization metric
 size_t sum=0;
 
@@ -102,15 +102,16 @@ int left=board[i]-i;
 left=(left<0)?left+len-1:left;
 diag[left]++;}//row down
 for(size_t i=0;i<len;i++){
-sum+=diag[i]==0;}
+sum+=diag[i]>1;}
+
 
 for(size_t i=0;i<len;i++){diag[i]=0;}
 for(size_t i=0;i<len;i++){
-int left=board[i]-(len-i-1);
-left=(left<0)?left+len-1:left;
+int left=board[i]+(len-i-1);
+left=(left>=len)?left-len+1:left;
 diag[left]++;}//row down
 for(size_t i=0;i<len;i++){
-sum+=diag[i]==0;}
+sum+=diag[i]>1;}
 
 
 return sum;
@@ -331,11 +332,13 @@ u64 A,B;
 
 print("Start solving at:",mstime()," ms\n");
 #endif
-if(N>1024){fdsolve(q,N);dsolve(q,N);}
+
+if(N>1024){fdsolve(q,N);
+dsolve(q,N);}
 if(N<1025)psolve(q,N);
 
 
-size_t fail=0; const int smallboard=N<9;
+size_t fail=0,cur2=0; const int smallboard=N<9;
 if(smallboard)psolve(q,N);
 //u64 cur=countudiag(q,N);
 u64 cur=diags(q,N,0);
@@ -359,8 +362,9 @@ swapq(q[A],q[B]);
 #if QDEBUG
 swapt++;//valid swaps total
 #endif
-//cur=countudiag(q,N);
+cur2=countudiag(q,N);
 cur=diags(q,N,best);//count diagonal intersects
+//if(cur2!=cur){print("\n",cur,cur2,"\n");}
 
 if(cur>best){ //revert if worse
 
@@ -376,7 +380,7 @@ continue;  }
 #if QDEBUG
 
   if(clock()-nxt>INTERSECT_DISP*CLOCKS_PER_SEC){
-  print("solve:",mstime(),"ms Intersections:",cur,"/",N,"VSwaps:",swapt,"Fail:",fail,"\n");if(N<64)printboard(q,N);puts("");
+  print("solve:",mstime(),"ms Intersections:",cur,"/",N,"VSwaps:",swapt,"Fail:",fail,"\n");if(N<64)printboard(q,N);
 nxt=clock();
   }
 
@@ -396,8 +400,14 @@ if(!q){perror("Queen array size too large");exit(2);}
 ; diag=calloc(sizeof(int),N);//diag row/cols(2^31-1 max)
 if(!diag){perror("Diag array size too large");exit(3);}
 for(int i=0;i<N;i++)q[i]=i;//unique rows/cols to swap.
+/*even,odd order
+size_t i=0,z=0;
+for(;i<N&&z<N;i++,z+=2)q[i]=z;
+for(z=1;i<N&&z<N;i++,z+=2)q[i]=z;
 
-;solve(q,N);
+*/
+solve(q,N);
+//
 if(argc==3 && argv[2][0]=='p'){printboard(q,N);}
 print("\nSolution found in:",mstime()," milliseconds",swapt,"swaps\n");
 
