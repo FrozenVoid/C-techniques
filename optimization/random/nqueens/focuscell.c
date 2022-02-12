@@ -44,6 +44,26 @@ diag[r]++;if(diag[r]>1){rightret=i;break;}}
 return rightret>leftret?leftret:rightret;
 }
 
+size_t lstcols(int* board,size_t len){
+//last d intersect
+size_t leftret=len,rightret=len;
+for(size_t i=0;i<len;i++){diag[i]=0;}
+for(size_t i=0;i<len;i++){
+int r=board[i]-i;//rowcol
+r=r<0?r+len-1:r;
+diag[r]++;if(diag[r]>1 ){leftret=i;;}}
+
+for(size_t i=0;i<len;i++){;diag[i]=0;}
+for(size_t i=0;i<len;i++){
+int r=board[i]-(len-i-1);//rowcol
+r=r<0?r+len-1:r;
+diag[r]++;if(diag[r]>1 ){rightret=i;}}
+if(rightret==len)return leftret;
+return rightret<leftret?leftret:rightret;
+}
+
+
+
 size_t mostcols2(int* board,size_t len){
 size_t sum=0,maxi=0;//most collided col.
 for(size_t i=0;i<len;i++){diag[i]=0;}
@@ -163,7 +183,7 @@ void dsolve(int* q,int N){int temp;
 #define swapq(x,y) temp=x;x=y;y=temp;
 u64 A,B;size_t fail=0;
 u64 limf=N*16;
-u64 limf2=limf/4;
+u64 limf2=N/4;
 u64 limf3=N/16;
 size_t tdiag;
 u64 cur=countudiag(q,N),best=cur,udiag=0,ucur=0;
@@ -173,10 +193,10 @@ u64 cur=countudiag(q,N),best=cur,udiag=0,ucur=0;
  //tdiag=diags(q,N);
 print("Starting diagonal solver:",mstime()," ms",cur,"intersections\n");
 #endif
-while(cur>limf3){//fst=firstq1(q,N);
+while(cur){fst=fstcols(q,N);
 
-if(fail>limf2){B=randuint64()%N;
-}else{B=fstcols(q,N);}
+if(fail>limf2){B=mostcols2(q,N);
+}else{B=fst;}
 //if(cur!=best)B=randuint64()%N;else{B=fstcols(q,N);}
 //if(cur<5){firstq1(q,N);B=randuint64()&1?last:fst;}
 A=randuint64()%N;while(A==B)A=randuint64()%N;
@@ -197,16 +217,17 @@ swapq(q[A],q[B]);
 #endif
 if(fail++>limf)break;//revert if worse
 continue; }
-fail=0;best=cur;
+
 
 #if QDEBUG
  //tdiag=diags(q,N);
   if(clock()-nxt>INTERSECT_DISP*CLOCKS_PER_SEC ){
-  print("dsolve:",mstime(),"ms Intersections:",best,"VSwaps:",swapt,"\n");nxt=clock();}
+  print("\n best=",best,"cur=",cur,"fst=",fst,"A=",A,"B=",B,"fail=",fail,"/",limf2);
+  print("\ndsolve:",mstime(),"ms Intersections:",best,"VSwaps:",swapt);nxt=clock();}
 #else
 fflush(stdout);//fix low priority;
 #endif
-
+fail=0;best=cur;
 } //end loop
 
  print("dsolve:",mstime(),"ms Intersections:",cur,"VSwaps:",swapt,"fails",fail,"\n");
@@ -216,12 +237,13 @@ fflush(stdout);//fix low priority;
 //first diagonal count solver ~O(N)
 void fdsolve(int* q,int N){int temp;
 #define swapq(x,y) temp=x;x=y;y=temp;
-u64 A,B;size_t fail=0;
+u64 A,B;size_t fail=0,dupcur=0;
 u64 limf=N*16;
 u64 limf2=N/4;
 u64 limf3=N/16;
-size_t scramble=512/log2index(N);
-u64 limf4=N/32;
+size_t lindex=log2index(N);
+size_t scramble=512/lindex;
+u64 limf4=2+N/512;
 #if QDEBUG
 //printboard(q,N);
  //tdiag=diags(q,N);
@@ -240,13 +262,18 @@ u64 cur=fstcols(q,N),best=cur,udiag=0,ucur=0;
  //tdiag=diags(q,N);
 print("Starting fdsolve solver:",mstime()," ms",N-cur,"intersections\n");
 #endif
-while(best<N ){//fst=firstq1(q,N);
+while(best<N  ){//fst=firstq1(q,N);
 fst=fstcols(q,N);
 B=fst;
-//if(cur==best){B=mostcols2(q,N);}
-//if(cur!=best)B=randuint64()%N;else{B=fstcols(q,N);}
-//if(cur<5){firstq1(q,N);B=randuint64()&1?last:fst;}
-A=randuint64()%N;while(A==B)A=randuint64()%N;
+//if(dupcur>lindex)B=mostcols2(q,N);
+//limit search range B <>N (Bmax+1==N)N-Bmax-1=0
+if(cur!=best){
+A=fst+randuint64()%(N-fst-1);
+while(A==B)A=fst+randuint64()%(N-fst-1);
+}else{
+A=randuint64()%(N);
+while(A==B)A=randuint64()%(N);
+}
 
 //if(cur!=udiag )B=mostcols(q,N);//stuck
 //do{A=randuint64()%N;}while(A==B);
@@ -265,7 +292,6 @@ if(cur<fst){swapq(q[A],q[B]);}
 #endif
 if(fail++>(N-best)*limf4)break;//revert if worse
 continue; }
-//if(!once){print("\n best,cur,fst,A,B,fail",best,cur,fst,A,B,fail);}
 
 
 #if QDEBUG
@@ -273,13 +299,14 @@ continue; }
 
  //tdiag=diags(q,N);
   if(clock()-nxt>INTERSECT_DISP*CLOCKS_PER_SEC ){
-  //print("\n best=",best,"cur=",cur,"fst=",fst,"A=",A,"B=",B,"fail=",fail);
+  print("\n best=",best,"cur=",cur,"fst=",fst,"A=",A,"B=",B,"fail=",fail,"/",(N-best)*limf4);
   print("\nfdsolve:",mstime(),"ms Solved%:",((best*100.0)/N),"VSwaps:",swapt);nxt=clock();}
 
 
 #else
 fflush(stdout);//fix low priority;
 #endif
+//if(best==cur)dupcur++;else{dupcur=0;}
 fail=0;best=cur;
 } //end loop
 
@@ -297,7 +324,7 @@ u64 A,B;
 
 print("Start solving at:",mstime()," ms\n");
 #endif
-if(N>1024)fdsolve(q,N);
+if(N>1024){fdsolve(q,N);dsolve(q,N);}
 if(N<1025)psolve(q,N);
 
 
