@@ -64,20 +64,25 @@ return lasti;}
 
 
 //--------------maximum collision addresss----------
-size_t mostcols(int* board,size_t len){
+i64 mostcols(int* board,size_t len){
 size_t sum=0,maxi=0;//find most collided column
 for(size_t i=0;i<len*2;i++){diag2[i]=0;}
+for(size_t i=0;i<len;i++){++diag2[board[i]+i];}
 for(size_t i=0;i<len;i++){
-size_t c=++diag2[board[i]+i];
+size_t c=diag2[board[i]+(len-i)];
 if(c>sum){sum=c;maxi=i;}}
 
+
 for(size_t i=0;i<len*2;i++){diag2[i]=0;}
+for(size_t i=0;i<len;i++){++diag2[board[i]+(len-i)];}
 for(size_t i=0;i<len;i++){
-size_t c=++diag2[board[i]+(len-i)];
+size_t c=diag2[board[i]+(len-i)];
 if(c>sum){sum=c;maxi=i;}}
 return maxi;}
 
 //-----------linear collission count----------
+
+
 size_t countudiag(int* board,size_t len){
 size_t sum=0;//count exact collisions
 for(size_t i=0;i<len*2;i++){diag2[i]=0;}
