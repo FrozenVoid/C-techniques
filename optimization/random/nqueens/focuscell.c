@@ -6,14 +6,15 @@
 #define INTERSECT_DISP 3//1 seconds
 #define MS_CLOCK (CLOCKS_PER_SEC/1000)
 #define MIN_SIDE 4//minimal board width
+#define swapq(x,y) ({int temp=x;x=y;y=temp;})
 size_t last=0,fst=0;//focus column(last intersect)
-int* diag;
+int* diag2;
 i64 swapt=0;//valid swaps total(set if QDEBUG enabled)
 u64 calls=0,rndtime=0,cti;
 clock_t nxt=0;
 
 
-void printboard(int*q,size_t N){print("\n");for(int i=0;i<N;i++)printf("%d,",q[i]);}
+void printboard(int*q,size_t N){print("\n");for(size_t i=0;i<N;i++)printf("%d,",q[i]);}
 size_t diags(int*board,size_t len,size_t early){//optimization metric
 size_t sum=0;
 
@@ -32,90 +33,67 @@ return sum;}
 uint64_t log2index(size_t X){return ((unsigned) (63 - __builtin_clzll((X)) ))      ;}
 
 
-size_t fstcols(int* board,size_t len){
-size_t leftret=len,rightret=len;
-for(size_t i=0;i<len;i++){diag[i]=0;}
+//-----------first column with collision---------
+i64 fstcols(int* board,size_t len){
+i64 lasti=len;//none exist
+for(size_t i=0;i<len*2;i++){diag2[i]=0;}
+for(size_t i=0;i<len;i++){++diag2[board[i]+i];}
 for(size_t i=0;i<len;i++){
-int r=board[i]-i;//rowcol
-r=r<0?r+len-1:r;
-diag[r]++;if(diag[r]>1){leftret=i;break;}}
+if(diag2[board[i]+i]>1){lasti=i;break;}}
 
-for(size_t i=0;i<len;i++){;diag[i]=0;}
+
+for(size_t i=0;i<len*2;i++){diag2[i]=0;}
+for(size_t i=0;i<len;i++){++diag2[board[i]+(len-i)];}
+for(size_t i=0;i<lasti;i++){//skip lasti+
+if(diag2[board[i]+(len-i)]>1){lasti=i;break;}}
+return lasti;}
+
+//----------last collision column------------
+i64 lstcols(int* board,size_t len){
+i64 lasti=len;//none exist
+for(size_t i=0;i<len*2;i++){diag2[i]=0;}
+for(size_t i=0;i<len;i++){++diag2[board[i]+i];}
+for(i64 i=len-1;i>-1;i--){
+if(diag2[board[i]+i]>1){lasti=i;break;}}
+
+for(size_t i=0;i<len*2;i++){diag2[i]=0;}
+for(size_t i=0;i<len;i++){++diag2[board[i]+(len-i)];}
+for(i64 i=lasti-1;i>-1;i--){//skip lasti+
+if(diag2[board[i]+(len-i)]>1){lasti=i;break;}}
+return lasti;}
+
+
+//--------------maximum collision addresss----------
+size_t mostcols(int* board,size_t len){
+size_t sum=0,maxi=0;//find most collided column
+for(size_t i=0;i<len*2;i++){diag2[i]=0;}
 for(size_t i=0;i<len;i++){
-int r=board[i]-(len-i-1);//rowcol
-r=r<0?r+len-1:r;
-diag[r]++;if(diag[r]>1){rightret=i;break;}}
+size_t c=++diag2[board[i]+i];
+if(c>sum){sum=c;maxi=i;}}
 
-
-
-return rightret>leftret?leftret:rightret;
-}
-
-size_t lstcols(int* board,size_t len){
-//last d intersect
-size_t leftret=len,rightret=len;
-for(size_t i=0;i<len;i++){diag[i]=0;}
+for(size_t i=0;i<len*2;i++){diag2[i]=0;}
 for(size_t i=0;i<len;i++){
-int r=board[i]-i;//rowcol
-r=r<0?r+len-1:r;
-diag[r]++;if(diag[r]>1 ){leftret=i;;}}
+size_t c=++diag2[board[i]+(len-i)];
+if(c>sum){sum=c;maxi=i;}}
+return maxi;}
 
-for(size_t i=0;i<len;i++){;diag[i]=0;}
-for(size_t i=0;i<len;i++){
-int r=board[i]-(len-i-1);//rowcol
-r=r<0?r+len-1:r;
-diag[r]++;if(diag[r]>1 ){rightret=i;}}
-if(rightret==len)return leftret;
-return rightret<leftret?leftret:rightret;
-}
-
-
-
-size_t mostcols2(int* board,size_t len){
-size_t sum=0,maxi=0;//most collided col.
-for(size_t i=0;i<len;i++){diag[i]=0;}
-for(size_t i=0;i<len;i++){
-int r=board[i]-i;//rowcol
-diag[r<0?r+len-1:r]++;}
-
-for(size_t i=0;i<len;i++){
-if(diag[i]>sum){sum=diag[i];maxi=i;};}
-
-for(size_t i=0;i<len;i++){diag[i]=0;}
-for(size_t i=0;i<len;i++){
-int r=board[i]-(len-i-1);//rowcol
-diag[r<0?r+len-1:r]++;;}
-for(size_t i=0;i<len;i++){
-if(diag[i]>sum){sum=diag[i];maxi=i;}
-;;}
-return maxi;
-}
-
+//-----------linear collission count----------
 size_t countudiag(int* board,size_t len){
-//each collision leaves +zero in diag array.
-i64 sum=0;//count double occupied diagonals
-//all q sum to (len*(len-1))/2;
-//0 1 2 3 4 5 = 15= 6*5/2
-for(size_t i=0;i<len;i++){diag[i]=0;}
-for(size_t i=0;i<len;i++){
-int left=board[i]-i;
-left=(left<0)?left+len-1:left;
-diag[left]++;}//row down
-for(size_t i=0;i<len;i++){
-sum+=diag[i]>1;}
+size_t sum=0;//count exact collisions
+for(size_t i=0;i<len*2;i++){diag2[i]=0;}
+for(size_t i=0;i<len;i++){diag2[board[i]+i]++;}
+for(size_t i=0;i<len*2;i++){sum+=(diag2[i]-1)*(diag2[i]>1);}
+
+for(size_t i=0;i<len*2;i++){diag2[i]=0;}
+for(size_t i=0;i<len;i++){diag2[board[i]+(len-i)]++;}
+for(size_t i=0;i<len*2;i++){sum+=(diag2[i]-1)*(diag2[i]>1);}
+return sum;}
+//--------------------------------------------
 
 
-for(size_t i=0;i<len;i++){diag[i]=0;}
-for(size_t i=0;i<len;i++){
-int left=board[i]+(len-i-1);
-left=(left>=len)?left-len+1:left;
-diag[left]++;}//row down
-for(size_t i=0;i<len;i++){
-sum+=diag[i]>1;}
 
 
-return sum;
-}
+
 size_t firstq2(int*board,size_t len){//first intersect
 #if QDEBUG
 calls++;
@@ -141,8 +119,7 @@ return len;}
 
 //partially solve by 1st intersect(firstq1)
 // O(N) > complexity < O(N^2)
-void psolve(int* q,int N){int temp;
-#define swapq(x,y) temp=x;x=y;y=temp;
+void psolve(int* q,size_t N){
 u64 limlq=N;//lower limit for queen swap fails
 u64 cur,lastq=0, A,B,edge=N/256;
 #if QDEBUG
@@ -187,8 +164,7 @@ fflush(stdout);//fix low priority assigned if no output
 
 //=======================
 //diagonal count solver ~O(N) but weak vs ending
-void dsolve(int* q,int N){int temp;
-#define swapq(x,y) temp=x;x=y;y=temp;
+void dsolve(int* q,int N){
 u64 A,B;size_t fail=0;
 u64 limf=N*16;
 u64 limf2=N/4;
@@ -201,9 +177,9 @@ u64 cur=countudiag(q,N),best=cur,udiag=0,ucur=0;
  //tdiag=diags(q,N);
 print("Starting diagonal solver:",mstime()," ms",cur,"intersections\n");
 #endif
-while(cur){fst=fstcols(q,N);
+while(cur>2){fst=fstcols(q,N);
 
-if(fail>limf2){B=mostcols2(q,N);
+if(fail>limf2){B=mostcols(q,N);
 }else{B=fst;}
 //if(cur!=best)B=randuint64()%N;else{B=fstcols(q,N);}
 //if(cur<5){firstq1(q,N);B=randuint64()&1?last:fst;}
@@ -243,8 +219,7 @@ fail=0;best=cur;
 
 //=======================
 //first diagonal count solver ~O(N)
-void fdsolve(int* q,int N){int temp;
-#define swapq(x,y) temp=x;x=y;y=temp;
+void fdsolve(int* q,int N){
 u64 A,B;size_t fail=0,dupcur=0;
 u64 limf=N*16;
 u64 limf2=N/4;
@@ -252,42 +227,18 @@ u64 limf3=N/16;
 size_t lindex=log2index(N);
 size_t scramble=512/lindex;
 u64 limf4=2+N/512;
-#if QDEBUG
-//printboard(q,N);
- //tdiag=diags(q,N);
-print("Scramble*=",scramble,"\n");
-#endif
-//scramble diagonals
-for(int z=0;z<scramble;z++){
-for(size_t i=0;i<N;i++){
-size_t rcol=randuint64()%N;
-swapq(q[i],q[rcol]);
-}}
+
 u64 cur=fstcols(q,N),best=cur,udiag=0,ucur=0;
 
 #if QDEBUG
-//printboard(q,N);
- //tdiag=diags(q,N);
-print("Starting fdsolve solver:",mstime()," ms",N-cur,"intersections\n");
+print("Starting fdsolve solver:",mstime()," ms",cur,"first collision\n");
 #endif
-while(best<N  ){//fst=firstq1(q,N);
-fst=fstcols(q,N);
-B=fst;
-//if(dupcur>lindex)B=mostcols2(q,N);
+while(best<N  ){fst=fstcols(q,N);B=fst;
 //limit search range B <>N (Bmax+1==N)N-Bmax-1=0
-if(cur!=best){
-A=fst+randuint64()%(N-fst-1);
-while(A==B)A=fst+randuint64()%(N-fst-1);
-}else{
-A=randuint64()%(N);
-while(A==B)A=randuint64()%(N);
-}
-
-//if(cur!=udiag )B=mostcols(q,N);//stuck
-//do{A=randuint64()%N;}while(A==B);
-
+if(cur!=best){do{A=fst+randuint64()%(N-fst-1);}
+while(A==B);
+}else{do{A=randuint64()%(N);}while(A==B);}
 swapq(q[A],q[B]);
-//for(int i=0;i<N;i++)printf("%d,",q[i]+1);print("\n");
 #if QDEBUG
 swapt++;//valid swaps total
 #endif
@@ -300,8 +251,6 @@ if(cur<fst){swapq(q[A],q[B]);}
 #endif
 if(fail++>(N-best)*limf4)break;//revert if worse
 continue; }
-
-
 #if QDEBUG
 
 
@@ -314,7 +263,7 @@ continue; }
 #else
 fflush(stdout);//fix low priority;
 #endif
-//if(best==cur)dupcur++;else{dupcur=0;}
+
 fail=0;best=cur;
 } //end loop
 
@@ -322,26 +271,36 @@ fail=0;best=cur;
 }
 
 //===================Solver===========================
-void solve(int* q,int N){int temp;
+void solve(int* q,int N){
 //step-by-step solver ~O(N^2)
-#define swapq(x,y) temp=x;x=y;y=temp;
-u64 A,B;
-
+u64 A,B;size_t scramble=512/log2index(N);
+#if QDEBUG
+//printboard(q,N);
+ //tdiag=diags(q,N);
+print("Scramble*=",scramble,"\n");
+#endif
+//scramble diagonals
+for(int z=0;z<scramble;z++){
+for(size_t i=0;i<N;i++){
+size_t rcol=randuint64()%N;
+swapq(q[i],q[rcol]);
+}}
 
 #if QDEBUG
 
 print("Start solving at:",mstime()," ms\n");
 #endif
-
+//dsolve(q,N);
 if(N>1024){fdsolve(q,N);
-dsolve(q,N);}
-if(N<1025)psolve(q,N);
+dsolve(q,N);;}else psolve(q,N);
 
 
-size_t fail=0,cur2=0; const int smallboard=N<9;
-if(smallboard)psolve(q,N);
+
+
+size_t fail=0,cur2=0;
+if(N<9)psolve(q,N);
 //u64 cur=countudiag(q,N);
-u64 cur=diags(q,N,0);
+u64 cur=diags(q,N,N);
 u64 best=cur,udiag=0,ucur=0;
 #if QDEBUG
 if(cur){print(N," is partially solved to:",cur," intersections and ",swapt,"swaps;",mstime(),"ms\n");}
@@ -362,7 +321,7 @@ swapq(q[A],q[B]);
 #if QDEBUG
 swapt++;//valid swaps total
 #endif
-cur2=countudiag(q,N);
+//cur2=countudiag(q,N);
 cur=diags(q,N,best);//count diagonal intersects
 //if(cur2!=cur){print("\n",cur,cur2,"\n");}
 
@@ -394,20 +353,14 @@ best=cur;fail=0;
 
 int main(int argc,char**argv){
 if(argc<2){syntax:;puts("Syntax:nq N [p]\n N=Board size min=" stringify(MIN_SIDE) " \n p=printboard");exit(1);}
-int N=atoi(argv[1]);if(N<MIN_SIDE||N<4)goto syntax;
-int* q=calloc(sizeof(int),N);//queen row/cols(2^31-1 max)
+size_t N=atoi(argv[1]);if(N<MIN_SIDE||N<4)goto syntax;
+int* q=malloc(sizeof(int)*N);//queen row/cols(2^31-1 max)
 if(!q){perror("Queen array size too large");exit(2);}
-; diag=calloc(sizeof(int),N);//diag row/cols(2^31-1 max)
-if(!diag){perror("Diag array size too large");exit(3);}
-for(int i=0;i<N;i++)q[i]=i;//unique rows/cols to swap.
-/*even,odd order
-size_t i=0,z=0;
-for(;i<N&&z<N;i++,z+=2)q[i]=z;
-for(z=1;i<N&&z<N;i++,z+=2)q[i]=z;
-
-*/
+diag2=malloc(sizeof(int)*(N+2)*2);//flag array*diagonals
+if(!diag2){perror("Diag array size too large");exit(3);}
+for(size_t i=0;i<N;i++)q[i]=i;//unique rows/cols to swap.
 solve(q,N);
-//
+
 if(argc==3 && argv[2][0]=='p'){printboard(q,N);}
 print("\nSolution found in:",mstime()," milliseconds",swapt,"swaps\n");
 
