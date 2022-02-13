@@ -244,7 +244,8 @@ while(best ){
 ;B=randuint64()&1?fst:last;lastc=last;fstc=fst;
 //limit search range B <>N (Bmax+1==N)N-Bmax-1=0
 if(cur!=best){
-do{A=fst+randuint64()%(N-fst-1);}
+
+do{A=fst+randuint64()%(best);}
 while(A==B);
 }else{do{A=randuint64()%(N);}while(A==B);}
 swapq(q[A],q[B]);
@@ -269,7 +270,7 @@ continue; }
 
  //tdiag=diags(q,N);
   if(clock()-nxt>INTERSECT_DISP*CLOCKS_PER_SEC ){
-  print("\n best=",best,"cur=",cur,"fst=",fst,"A=",A,"B=",B,"fail=",fail,"/",(N-best)*limf4);
+  print("\n best=",best,"cur=",cur,"fst=",fst,"A=",A,"B=",B,"fail=",fail,"/",limf2);
   print("\nfdsolve:",mstime(),"ms Solved%:",100*(((1.0*N-best))/N),"VSwaps:",swapt);nxt=clock();}
 
 
