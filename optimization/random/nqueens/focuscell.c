@@ -243,7 +243,10 @@ while(best ){
 
 ;B=randuint64()&1?fst:last;lastc=last;fstc=fst;
 //limit search range B <>N (Bmax+1==N)N-Bmax-1=0
-do{A=randuint64()%(N);}while(A==B);
+if(cur!=best){
+do{A=fst+randuint64()%(N-fst-1);}
+while(A==B);
+}else{do{A=randuint64()%(N);}while(A==B);}
 swapq(q[A],q[B]);
 #if QDEBUG
 swapt++;//valid swaps total
@@ -277,7 +280,7 @@ fflush(stdout);//fix low priority;
 fail=0;best=cur;
 } //end loop
 
- print("\nfdsolve:",mstime(),"ms Distance:",best,"VSwaps:",swapt,"fails",fail,"\n");
+ print("fdsolve:",mstime(),"ms Distance:",best,"VSwaps:",swapt,"fails",fail,"\n");
 }
 
 //===================Solver===========================
