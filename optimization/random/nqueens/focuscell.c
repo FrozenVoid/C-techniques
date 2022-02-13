@@ -219,7 +219,7 @@ fflush(stdout);//fix low priority;
 fail=0;best=cur;
 } //end loop
 
- print("dsolve:",mstime(),"ms Intersections:",cur,"VSwaps:",swapt,"fails",fail,"\n");
+ print("\ndsolve:",mstime(),"ms Intersections:",cur,"VSwaps:",swapt,"fails",fail,"\n");
 }
 
 //=======================
@@ -232,29 +232,34 @@ u64 limf3=N/16;
 size_t lindex=log2index(N);
 size_t scramble=512/lindex;
 u64 limf4=2+N/512;
-
-u64 cur=fstcols(q,N),best=cur,udiag=0,ucur=0;
-
+last=lstcols(q,N);
+fst=fstcols(q,N);
+u64 cur=last-fst,best=cur,udiag=0,ucur=0;
+u64 lastc,fstc;
 #if QDEBUG
-print("Starting fdsolve solver:",mstime()," ms",cur,"first collision\n");
+print("\nStarting fdsolve solver:",mstime()," ms",cur,"distance\n");
 #endif
-while(best<N  ){fst=fstcols(q,N);B=fst;
+while(best ){
+
+;B=randuint64()&1?fst:last;lastc=last;fstc=fst;
 //limit search range B <>N (Bmax+1==N)N-Bmax-1=0
-if(cur!=best){do{A=fst+randuint64()%(N-fst-1);}
-while(A==B);
-}else{do{A=randuint64()%(N);}while(A==B);}
+do{A=randuint64()%(N);}while(A==B);
 swapq(q[A],q[B]);
 #if QDEBUG
 swapt++;//valid swaps total
 #endif
-cur=fstcols(q,N);//count diagonal intersects
-if(cur<=fst){
-if(cur<fst){swapq(q[A],q[B]);}
+last=lstcols(q,N);
+fst=fstcols(q,N);
+cur=last-fst;//count space of collision size
+if(cur>best){
+if(1){swapq(q[A],q[B]);
+fst=fstc;last=lastc;
+}
 
 #if QDEBUG
  swapt--;//valid swaps revert
 #endif
-if(fail++>(N-best)*limf4)break;//revert if worse
+if(fail++>limf2)break;//revert if worse
 continue; }
 #if QDEBUG
 
@@ -262,7 +267,7 @@ continue; }
  //tdiag=diags(q,N);
   if(clock()-nxt>INTERSECT_DISP*CLOCKS_PER_SEC ){
   print("\n best=",best,"cur=",cur,"fst=",fst,"A=",A,"B=",B,"fail=",fail,"/",(N-best)*limf4);
-  print("\nfdsolve:",mstime(),"ms Solved%:",((best*100.0)/N),"VSwaps:",swapt);nxt=clock();}
+  print("\nfdsolve:",mstime(),"ms Solved%:",100*(((1.0*N-best))/N),"VSwaps:",swapt);nxt=clock();}
 
 
 #else
@@ -272,7 +277,7 @@ fflush(stdout);//fix low priority;
 fail=0;best=cur;
 } //end loop
 
- print("fdsolve:",mstime(),"ms Distance:",N-best,"VSwaps:",swapt,"fails",fail,"\n");
+ print("\nfdsolve:",mstime(),"ms Distance:",best,"VSwaps:",swapt,"fails",fail,"\n");
 }
 
 //===================Solver===========================
