@@ -3,7 +3,7 @@
 #define NCYCLES 10 //report each NCYCLES
 #define mstime() ((clock())/(CLOCKS_PER_SEC/1000))
 #define tsctime(c) ((__rdtsc()-c)>>30)
-#define SCRAMBLE 8//scramble iters 0-N
+#define SCRAMBLE 2//scramble iters 0-N
 #define QDEBUG 1//print debug/iteration data
 size_t N;
 int* board;
@@ -13,9 +13,8 @@ i64 swapt=0,swaps=0,fstcalls=0;//valid swaps total(set if QDEBUG enabled)
 size_t fail=0,tfail=0;
 uint64_t log2index(size_t X){return ((unsigned) (63 - __builtin_clzll((X)) ))      ;}
 #define swapq(x,y) ({int temp=x;x=y;y=temp;})
-void swapc(size_t x,size_t y){
+inline void swapc(size_t x,size_t y){
 i64  clx,crx,cly,cry;
-if(x==y)return;//no action
 //update sums/first/last
 #if QDEBUG
 swaps++;//valid swaps total
@@ -36,26 +35,39 @@ sumR-=cry>1;
 //swap
 swapq(board[x],board[y]);
 //updates sums
-sumL+=(++diagL[board[x]+x]>1);
-sumL+=(++diagL[board[y]+y]>1);;
-sumR+=(++diagR[board[x]+(N-x)]>1);
-sumR+=(++diagR[board[y]+(N-y)]>1);
+clx=(++diagL[board[x]+x]);
+cly=(++diagL[board[y]+y]);;
+crx=(++diagR[board[x]+(N-x)]);
+cry=(++diagR[board[y]+(N-y)]);
+
+sumL+=(clx>1);//reduce sum if old collision
+sumL+=cly>1;
+sumR+=crx>1;
+sumR+=cry>1;
+
+
 
 
 }
 //(ending only) speedup searches for first intersecting diagonal
-//this is non-linear but limited to  1/limfast <>4/limfast calls
-size_t fstcols(int* board,size_t len){
+//this is non-linear but limited to  last cols
+inline size_t fstcols(int* board,size_t len){
 #if QDEBUG
 fstcalls++;//record first column calls
 #endif
 for(size_t i=0;i<len;i++){
 if((diagL[board[i]+i]>1)||(diagR[board[i]+(len-i)]>1)){return i;}}
 return len;;}
+//queen collisons at position
+inline size_t qccount(int* q,size_t P){
+size_t lP=q[P]+P,rP=q[P]+(N-P);
+return ((diagL[lP]-1)*(diagL[lP]>1))+((diagR[rP]-1)*(diagR[rP]>1));
+;}
+//--------------------------
 void printboard(int*q,size_t N){print("\n");for(size_t i=0;i<N;i++)printf("%d\n",q[i]+1);}
 //https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
 
-uint32_t modreduce(uint32_t x, uint32_t N) {
+inline uint32_t modreduce(uint32_t x, uint32_t N) {
   return ((uint64_t) x * (uint64_t) N) >> 32 ;
 }
 uint32_t rndcell(){return modreduce(randuint32(),N);}
@@ -65,7 +77,7 @@ uint32_t rndcell(){return modreduce(randuint32(),N);}
 void linearsolve(int* q,int N){
 u64 A=0,B=0;int Aflag=0;
 u64 cend=__rdtsc();
-const size_t low=log2index(N)*log2index(N);
+const size_t low=(log2index(N)*log2index(N))/4;
 u64 cur=countudiag(),best=cur,lcur=cur;
 #if QDEBUG
 print("Start:",mstime()," ms",cur,"intersections",low,"lowlimit\n");
@@ -74,6 +86,7 @@ while(cur){
 loop:;u64 valr=randuint64();
 A=Aflag?modreduce((valr>>32),N):A;
 B=modreduce(valr&0xffffffff,N);
+if(!qccount(q,B))goto loop;
 swap_loc:;
 swapc(A,B);
 cur=countudiag();//count diagonal intersects
@@ -128,7 +141,11 @@ diagR=malloc(sizeof(int)*(N+2)*2);
 if(!diagR||!diagL){perror("Diag arrays size too large for malloc");exit(3);}
 for(size_t i=0;i<N;i++)q[i]=i;//unique rows/cols to swap.
 #if SCRAMBLE
-u64 timeseed=__rdtsc(),oldA,B;
+#if QDEBUG
+print("\nStarting scramble X",SCRAMBLE,"\nTime:",mstime(),"ms");
+#endif
+u64 timeseed=1;
+u64 oldA,B;
 setrseed(timeseed,1-~timeseed,timeseed-~timeseed,~timeseed+timeseed);
 for(int z=0;z<SCRAMBLE;z++){
 for(size_t i=0;i<N;i++){
