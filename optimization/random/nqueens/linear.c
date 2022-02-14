@@ -1,6 +1,6 @@
 #include "Util/void.h"//https://github.com/FrozenVoid/C-headers
 //linear ~O(N) NQueens  solver
-#define NCYCLES 10 //report each NCYCLES
+#define NCYCLES 4 //report each NCYCLES
 #define mstime() ((clock())/(CLOCKS_PER_SEC/1000))
 #define tsctime(c) ((__rdtsc()-c)>>30)
 #define SCRAMBLE 2//scramble iters 0-N
@@ -102,7 +102,7 @@ goto loop;}
   if(tsctime(cend)>NCYCLES ){
   clock_t Ntime=mstime();
   print("\n cols=",cur,"A=",A,"fst=",fstcalls,"valid/fail:",(((swaps>>1)-fail)),"/",(fail),"\nswap/ms:",1.0*swapt/Ntime,"fail/ms:",1.0*tfail/Ntime);
-  print("\nT:",Ntime,"ms Col%",100.0*(N-cur)/N,"Swapt",swapt,"Valid%",100.0-(200.0*fail/swaps));cend=__rdtsc();}
+  print("\nT:",Ntime,"ms Col%",100.0*(N-cur)/N,"Swapt",swapt,"Valid%",100.0-(200.0*tfail/swapt));cend=__rdtsc();}
 #endif
 
 tfail+=fail;swapt+=swaps;
