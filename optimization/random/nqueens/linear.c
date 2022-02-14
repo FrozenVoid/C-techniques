@@ -1,11 +1,10 @@
 #include "Util/void.h"//https://github.com/FrozenVoid/C-headers
-//linear O(N) NQueens  solver
+//linear ~O(N) NQueens  solver
 #define NCYCLES 4 //report each NCYCLES
 #define mstime() ((clock())/(CLOCKS_PER_SEC/1000))
 #define tsctime(c) ((__rdtsc()-c)>>30)
-#define QDEBUG 1//print swaps/intersect count each INTERSECT_DISP seconds
-
-#define MS_CLOCK (CLOCKS_PER_SEC/1000)
+#define SCRAMBLE 8//scramble iters 0-N
+#define QDEBUG 1//print debug/iteration data
 size_t N;
 int* board;
 int* diagL;i64 sumL=0;
@@ -44,7 +43,8 @@ sumR+=(++diagR[board[y]+(N-y)]>1);
 
 
 }
-
+//(ending only) speedup searches for first intersecting diagonal
+//this is non-linear but limited to  1/limfast <>4/limfast calls
 size_t fstcols(int* board,size_t len){
 #if QDEBUG
 fstcalls++;//record first column calls
@@ -63,31 +63,38 @@ uint32_t rndcell(){return modreduce(randuint32(),N);}
 #define countudiag() (sumL+sumR)
 //--------------------------------------------
 void linearsolve(int* q,int N){
-u64 A,B;
-u64 cend=__rdtsc();const size_t limfst=11;//N<20M >
+u64 A=0,B=0,fstc=0;
+u64 cend=__rdtsc();
+const size_t low=log2index(N);
 u64 cur=countudiag(),best=cur,lcur=cur;
 #if QDEBUG
-print("Start:",mstime()," ms",cur,"intersections",limfst,"fstlimit\n");
+print("Start:",mstime()," ms",cur,"intersections",low,"lowlimit\n");
 #endif
-while(cur){loop:;
-u64 valr=randuint64();
-A=(valr>>32);B=valr&0xffffffff;
-A=modreduce(A,N);B=modreduce(B,N);
-if(((swapt>>1)-tfail)<(swapt>>limfst))A=fstcols(q,N);
+while(cur){
+loop:;u64 valr=randuint64();
+A=modreduce((valr>>32),N);
+B=modreduce(valr&0xffffffff,N);
+swap_loc:;
 swapc(A,B);
 cur=countudiag();//count diagonal intersects
-if(cur>best){swapc(A,B);fail++;goto loop;}
+if(cur==best){fstc++;goto loop;}
+if(cur>best){swapc(A,B);fail++;
+if(best<low && fstc++>best){A=fstcols(q,N);fstc=0;
+B=modreduce((uint32_t)(randuint64()&0xffffffff),N);
+goto swap_loc;}
+goto loop;}
 
-else //update vars
-if(cur<best){//reset if new record
+
 #if QDEBUG
   if(tsctime(cend)>NCYCLES ){
-  print("\n cols=",cur,"A=",A," vswaps=",(swaps>>1)-fail,"fst=",fstcalls);
-  print("\nT:",mstime(),"ms Col%",100.0*(N-cur)/N,"Swapt",swapt,"Valid%",100.0-(200.0*tfail/swapt));cend=__rdtsc();}
+  clock_t Ntime=mstime();
+  print("\n cols=",cur,"A=",A,"fst=",fstcalls,"valid/fail:",(((swaps>>1)-fail)),"/",(fail),"\nswap/ms:",1.0*swapt/Ntime,"fail/ms:",1.0*tfail/Ntime);
+  print("\nT:",Ntime,"ms Col%",100.0*(N-cur)/N,"Swapt",swapt,"Valid%",100.0-(200.0*fail/swaps));cend=__rdtsc();}
 #endif
 
 tfail+=fail;swapt+=swaps;
-fail=0;;swaps=0;best=cur;}
+fail=0;;swaps=0;best=cur;fstc=1+best;
+
 
 
 } //end loop
@@ -120,6 +127,17 @@ diagL=malloc(sizeof(int)*(N+2)*2);
 diagR=malloc(sizeof(int)*(N+2)*2);
 if(!diagR||!diagL){perror("Diag arrays size too large for malloc");exit(3);}
 for(size_t i=0;i<N;i++)q[i]=i;//unique rows/cols to swap.
+#if SCRAMBLE
+u64 timeseed=__rdtsc(),oldA,B;
+setrseed(timeseed,1-~timeseed,timeseed-~timeseed,~timeseed+timeseed);
+for(int z=0;z<SCRAMBLE;z++){
+for(size_t i=0;i<N;i++){
+u64 valr=randuint64();
+oldA=(valr>>32);B=valr&0xffffffff;
+oldA=modreduce(oldA,N);B=modreduce(B,N);
+swapq(q[oldA],q[B]);
+}}
+#endif
 solve();
 
 if(argc==3 && argv[2][0]=='p'){printboard(q,N);}else if(!QDEBUG){print("Solved:",N);}
