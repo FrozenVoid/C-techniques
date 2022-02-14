@@ -1,6 +1,6 @@
 #include "Util/void.h"//https://github.com/FrozenVoid/C-headers
 //linear ~O(N) NQueens  solver
-#define NCYCLES 4 //report each NCYCLES
+#define NCYCLES 10 //report each NCYCLES
 #define mstime() ((clock())/(CLOCKS_PER_SEC/1000))
 #define tsctime(c) ((__rdtsc()-c)>>30)
 #define SCRAMBLE 8//scramble iters 0-N
@@ -63,23 +63,23 @@ uint32_t rndcell(){return modreduce(randuint32(),N);}
 #define countudiag() (sumL+sumR)
 //--------------------------------------------
 void linearsolve(int* q,int N){
-u64 A=0,B=0,fstc=0;
+u64 A=0,B=0;int Aflag=0;
 u64 cend=__rdtsc();
-const size_t low=log2index(N);
+const size_t low=log2index(N)*log2index(N);
 u64 cur=countudiag(),best=cur,lcur=cur;
 #if QDEBUG
 print("Start:",mstime()," ms",cur,"intersections",low,"lowlimit\n");
 #endif
 while(cur){
 loop:;u64 valr=randuint64();
-A=modreduce((valr>>32),N);
+A=Aflag?modreduce((valr>>32),N):A;
 B=modreduce(valr&0xffffffff,N);
 swap_loc:;
 swapc(A,B);
 cur=countudiag();//count diagonal intersects
-if(cur==best){fstc++;goto loop;}
+if(cur==best){Aflag=1;goto loop;}
 if(cur>best){swapc(A,B);fail++;
-if(best<low && fstc++>best){A=fstcols(q,N);fstc=0;
+if(best<low && Aflag){A=fstcols(q,N);Aflag=0;
 B=modreduce((uint32_t)(randuint64()&0xffffffff),N);
 goto swap_loc;}
 goto loop;}
@@ -93,7 +93,7 @@ goto loop;}
 #endif
 
 tfail+=fail;swapt+=swaps;
-fail=0;;swaps=0;best=cur;fstc=1+best;
+fail=0;;swaps=0;best=cur;Aflag=1;
 
 
 
