@@ -1,17 +1,18 @@
 #include "Util/void.h"//https://github.com/FrozenVoid/C-headers
-
 //linear O(N) NQueens  solver
+#define NCYCLES 4 //report each NCYCLES
 #define mstime() ((clock())/(CLOCKS_PER_SEC/1000))
+#define tsctime(c) ((__rdtsc()-c)>>30)
 #define QDEBUG 1//print swaps/intersect count each INTERSECT_DISP seconds
-#define INTERSECT_DISP 3//1 seconds
+
 #define MS_CLOCK (CLOCKS_PER_SEC/1000)
 size_t N;
 int* board;
 int* diagL;i64 sumL=0;
 int* diagR;i64 sumR=0;
-i64 swapt=0;//valid swaps total(set if QDEBUG enabled)
+i64 swapt=0,fstcalls=0;//valid swaps total(set if QDEBUG enabled)
 
-clock_t nxt=0;
+
 #define swapq(x,y) ({int temp=x;x=y;y=temp;})
 void swapc(size_t x,size_t y){
 i64  clx,crx,cly,cry;
@@ -27,24 +28,27 @@ cry=diagR[board[y]+(N-y)]--;
 
 
 //cannot see counts of columns
-if(!clx || !cly || !crx || !cry){print("\nInvalid diagonal data:x,y,clx,crx,cly,cry:\n",x,y,clx,crx,cly,cry);exit(22);}
+//if(!clx || !cly || !crx || !cry){print("\nInvalid diagonal data:x,y,clx,crx,cly,cry:\n",x,y,clx,crx,cly,cry);exit(22);}
 //reduce sums,first,last
-sumL-=clx>1;//reduce sum if old collision
-sumR-=crx>1;
+sumL-=(clx>1);//reduce sum if old collision
 sumL-=cly>1;
+sumR-=crx>1;
 sumR-=cry>1;
 //swap
 swapq(board[x],board[y]);
 //updates sums
-sumL+=++diagL[board[x]+x]>1;
-sumL+=++diagL[board[y]+y]>1;;
-sumR+=++diagR[board[x]+(N-x)]>1;
-sumR+=++diagR[board[y]+(N-y)]>1;
+sumL+=(++diagL[board[x]+x]>1);
+sumL+=(++diagL[board[y]+y]>1);;
+sumR+=(++diagR[board[x]+(N-x)]>1);
+sumR+=(++diagR[board[y]+(N-y)]>1);
 
 
 }
 
-
+size_t fstcols(int* board,size_t len){fstcalls++;
+for(size_t i=0;i<len;i++){
+if((diagL[board[i]+i]>1)||(diagR[board[i]+(len-i)]>1)){return i;}}
+return len;;}
 void printboard(int*q,size_t N){print("\n");for(size_t i=0;i<N;i++)printf("%d,",q[i]+1);}
 //https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
 
@@ -57,29 +61,30 @@ uint32_t rndcell(){return modreduce(randuint32(),N);}
 //--------------------------------------------
 void linearsolve(int* q,int N){
 u64 A,B;size_t fail=0,tfail=0;
-u64 cur=countudiag(),best=cur;
+u64 cend=__rdtsc();size_t limfst=N/2;
+u64 cur=countudiag(),best=cur,lcur=cur;
 #if QDEBUG
 print("Starting linear solver:",mstime()," ms",cur,"intersections\n");
 #endif
-while(cur){
+while(cur){loop:;
 u64 valr=randuint64();
 A=(valr>>32);B=valr&0xffffffff;
 A=modreduce(A,N);B=modreduce(B,N);
-
-swapc(A,B);cur=countudiag();//count diagonal intersects
-if(cur>=best){if(cur>best){swapc(A,B);fail++;}
-continue;}
+if(fail>limfst)A=fstcols(q,N);
+swapc(A,B);
+cur=countudiag();//count diagonal intersects
+if(cur>=best){if(cur>best){swapc(A,B);;}
+fail++;goto loop;}
 #if QDEBUG
-  if(clock()-nxt>INTERSECT_DISP*CLOCKS_PER_SEC ){
+  if(tsctime(cend)>NCYCLES ){
   print("\n best=",best,"cur=",cur,"A=",A,"B=",B," fail=",fail);
-  print("\n",mstime(),"ms Cols:",cur,"Swaps:",swapt,"Fails:",tfail);nxt=clock();}
-#else
-fflush(stdout);//fix low priority;
+  print("\nCols:",cur,"Swaps:",swapt,"Fails:",tfail,"Fst:",fstcalls);cend=__rdtsc();}
 #endif
 tfail+=fail;fail=0;best=cur;
 } //end loop
-
+#if QDEBUG
  print("\nSolved at:",mstime(),"ms Collisions:",cur,"Swaps:",swapt,"Fails:",tfail,"\n");
+#endif
 }
 
 
@@ -108,7 +113,8 @@ if(!diagR||!diagL){perror("Diag arrays size too large for malloc");exit(3);}
 for(size_t i=0;i<N;i++)q[i]=i;//unique rows/cols to swap.
 solve();
 
-if(argc==3 && argv[2][0]=='p'){printboard(q,N);}
-print("\nSolution found in:",mstime()," milliseconds",swapt,"swaps","\n");
-
+if(argc==3 && argv[2][0]=='p'){printboard(q,N);}else if(!QDEBUG){print("Solved");}
+#if QDEBUG
+print("\nSolution found in:",mstime()," milliseconds",swapt,"swaps",fstcalls,"fstcalls\n");
+#endif
 return 0;}
