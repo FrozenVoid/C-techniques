@@ -12,7 +12,7 @@ int* diagL;i64 sumL=0;
 int* diagR;i64 sumR=0;
 i64 swapt=0,fstcalls=0;//valid swaps total(set if QDEBUG enabled)
 
-
+uint64_t log2index(size_t X){return ((unsigned) (63 - __builtin_clzll((X)) ))      ;}
 #define swapq(x,y) ({int temp=x;x=y;y=temp;})
 void swapc(size_t x,size_t y){
 i64  clx,crx,cly,cry;
@@ -61,24 +61,24 @@ uint32_t rndcell(){return modreduce(randuint32(),N);}
 //--------------------------------------------
 void linearsolve(int* q,int N){
 u64 A,B;size_t fail=0,tfail=0;
-u64 cend=__rdtsc();size_t limfst=N/2;
+u64 cend=__rdtsc();const size_t limfst=log2index(N)/2;
 u64 cur=countudiag(),best=cur,lcur=cur;
 #if QDEBUG
-print("Starting linear solver:",mstime()," ms",cur,"intersections\n");
+print("Start:",mstime()," ms",cur,"intersections",limfst,"fstlimit\n");
 #endif
 while(cur){loop:;
 u64 valr=randuint64();
 A=(valr>>32);B=valr&0xffffffff;
 A=modreduce(A,N);B=modreduce(B,N);
-if(fail>limfst)A=fstcols(q,N);
+if(best<limfst)A=fstcols(q,N);
 swapc(A,B);
 cur=countudiag();//count diagonal intersects
 if(cur>=best){if(cur>best){swapc(A,B);;}
 fail++;goto loop;}
 #if QDEBUG
   if(tsctime(cend)>NCYCLES ){
-  print("\n best=",best,"cur=",cur,"A=",A,"B=",B," fail=",fail);
-  print("\nCols:",cur,"Swaps:",swapt,"Fails:",tfail,"Fst:",fstcalls);cend=__rdtsc();}
+  print("\n best=",best,"cur=",cur,"A=",A,"B=",B," fail=",fail,"fst=",fstcalls);
+  print("\nT:",mstime(),"ms Col%",100.0*(N-cur)/N,"Swaps",swapt,"Fail%",100.0*tfail/swapt);cend=__rdtsc();}
 #endif
 tfail+=fail;fail=0;best=cur;
 } //end loop
