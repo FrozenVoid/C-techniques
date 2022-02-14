@@ -17,6 +17,9 @@ void swapc(size_t x,size_t y){
 i64  clx,crx,cly,cry;
 if(x==y)return;//no action
 //update sums/first/last
+#if QDEBUG
+swapt++;//valid swaps total
+#endif
 clx=diagL[board[x]+x]--;//current X pos Left
 cly=diagL[board[y]+y]--;//current y pos Left
 crx=diagR[board[x]+(N-x)]--;
@@ -43,44 +46,40 @@ sumR+=++diagR[board[y]+(N-y)]>1;
 
 
 void printboard(int*q,size_t N){print("\n");for(size_t i=0;i<N;i++)printf("%d,",q[i]+1);}
+//https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
 
+uint32_t modreduce(uint32_t x, uint32_t N) {
+  return ((uint64_t) x * (uint64_t) N) >> 32 ;
+}
+uint32_t rndcell(){return modreduce(randuint32(),N);}
 //-----------linear collission count----------
 #define countudiag() (sumL+sumR)
 //--------------------------------------------
 void linearsolve(int* q,int N){
-u64 A,B;size_t fail=0;
+u64 A,B;size_t fail=0,tfail=0;
 u64 cur=countudiag(),best=cur;
-
 #if QDEBUG
 print("Starting linear solver:",mstime()," ms",cur,"intersections\n");
 #endif
+while(cur){
+u64 valr=randuint64();
+A=(valr>>32);B=valr&0xffffffff;
+A=modreduce(A,N);B=modreduce(B,N);
 
-while(cur){A=randuint64()%N;B=randuint64()%N;
-swapc(A,B);
-#if QDEBUG
-swapt++;//valid swaps total
-#endif
-cur=countudiag();//count diagonal intersects
-if(cur>=best){
-if(cur>best){swapc(A,B);fail++;
-#if QDEBUG
- swapt--;//valid swaps revert
-#endif
-}
-continue; }
-
-
+swapc(A,B);cur=countudiag();//count diagonal intersects
+if(cur>=best){if(cur>best){swapc(A,B);fail++;}
+continue;}
 #if QDEBUG
   if(clock()-nxt>INTERSECT_DISP*CLOCKS_PER_SEC ){
-  print("\n best=",best,"cur=",cur,"A=",A,"B=",B,"fail=",fail);
-  print("\ndsolve:",mstime(),"ms Intersections:",best,"VSwaps:",swapt);nxt=clock();}
+  print("\n best=",best,"cur=",cur,"A=",A,"B=",B," fail=",fail);
+  print("\n",mstime(),"ms Cols:",cur,"Swaps:",swapt,"Fails:",tfail);nxt=clock();}
 #else
 fflush(stdout);//fix low priority;
 #endif
-fail=0;best=cur;
+tfail+=fail;fail=0;best=cur;
 } //end loop
 
- print("\nlinearsolve:",mstime(),"ms Intersections:",cur,"VSwaps:",swapt,"fails",fail,"\n");
+ print("\nSolved at:",mstime(),"ms Collisions:",cur,"Swaps:",swapt,"Fails:",tfail,"\n");
 }
 
 
@@ -110,6 +109,6 @@ for(size_t i=0;i<N;i++)q[i]=i;//unique rows/cols to swap.
 solve();
 
 if(argc==3 && argv[2][0]=='p'){printboard(q,N);}
-print("\nSolution found in:",mstime()," milliseconds",swapt,swapt?"swaps":" ",sumL+sumR," intersections\n");
+print("\nSolution found in:",mstime()," milliseconds",swapt,"swaps","\n");
 
 return 0;}
