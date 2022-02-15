@@ -104,12 +104,10 @@ loop:;
 #if QDEBUG
 loops++;
 #endif
-A=modreduce(rndgen32(),N);
-B=modreduce(rndgen32(),N);
-//valr=rndgen64();
-//A=modreduce((valr>>32),N);
-//B=modreduce(valr&0xffffffff,N);
-if(!qccount2(A,B)||A==B)goto loop;
+do{A=modreduce(rndgen32(),N);}while(!qccount(A));
+do{duploc:;B=modreduce(rndgen32(),N);}while(!qccount(B));
+if(A==B)goto duploc;
+
 
 #if QDEBUG
 dir=1;
