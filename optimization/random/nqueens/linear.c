@@ -94,7 +94,7 @@ val_t rndcell(){return modreduce(randuint32(),N);}
   print("\nT:",Ntime,"ms Col%",100.0*(N-cur)/N,"Swapt",swapt,"Valid%",100.0*swapt/tswaps);cend=__rdtsc();}}
 //--------------------------------------------
 void linearsolve(){
- A=0,B=0,valr=0;val_t minsearch=N>1024?log2index(N):0;
+ A=0,B=0,valr=0;val_t minsearch=N>1024?log2index(N)/3:0;
 cend=__rdtsc();
  cur=countudiag(),best=cur;
 #if QDEBUG
@@ -106,7 +106,8 @@ loops++;
 #endif
 do{A=modreduce(rndgen32(),N);}while(!qccount(A));
 do{duploc:;B=modreduce(rndgen32(),N);}while(!qccount(B));
-if(A==B)goto duploc;
+if(A==B){//tseedw++;
+goto duploc;}
 
 
 #if QDEBUG
@@ -162,7 +163,7 @@ swapc(A,B);goto innerloop2;
 if(cur>0){goto loop;;}
 endl:; //end loop
 #if QDEBUG
- print("\nSolved N=",N," at:",mstime(),"ms Swaps:",swapt,"Fails:",tfail,"\n",tseedw);
+ print("\nSolved N=",N," at:",mstime(),"ms Swaps:",swapt,"Fails:",tfail,"\n",tseedw," calls\n");
 #endif
 }
 //===================Solver===========================
