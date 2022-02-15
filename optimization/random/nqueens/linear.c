@@ -1,6 +1,6 @@
 #include "Util/void.h"//https://github.com/FrozenVoid/C-headers
 //linear ~O(N) NQueens  solver
-
+//moved: https://github.com/FrozenVoid/NQ.c
 #define NCYCLES 8 //report each NCYCLES
 #define mstime() ((clock())/(CLOCKS_PER_SEC/1000))
 #define tsctime(c) ((__rdtsc()-c)>>30)
