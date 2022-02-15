@@ -5,12 +5,13 @@
 #define tsctime(c) ((__rdtsc()-c)>>30)
 #define SCRAMBLE 8//scramble iters 0-N
 #define QDEBUG 1//print debug/iteration data
+#define NONLINEAR 1//ending search if (cols<log(N))
 size_t N;
 int * board;
 int * diagL;i64 sumL=0;
 int * diagR;i64 sumR=0;
 i64 swapt=0,swaps=0;//valid swaps total(set if QDEBUG enabled)
-size_t fail=0,tfail=0,dir=1,tswaps=0,cend,A,B,valr,cur,best;
+size_t loops=0,fail=0,tfail=0,dir=1,tswaps=0,cend,A,B,valr,cur,best;
 uint64_t log2index(size_t X){return ((unsigned) (63 - __builtin_clzll((X)) ))      ;}
 #define swapq(x,y) ({int temp=x;x=y;y=temp;})
 
@@ -48,7 +49,10 @@ sumR+=!!(cry-1);
 //queen collisons at position: 2=none,2+=collision
  i32 qccount(size_t P){
 //cannot be zero due being set from q[]
-return ((diagL[board[P]+P]))+((diagR[board[P]+(N-P)]))-2;}
+int s=board[P];
+return ((diagL[s+P]))+((diagR[s+(N-P)]))-2;
+
+}
 
 size_t fstcols(){
 for(size_t i=0;i<N;i++){if(qccount(i))return i;};return N;}
@@ -67,7 +71,7 @@ uint32_t rndcell(){return modreduce(randuint32(),N);}
  void info(){
   if(tsctime(cend)>NCYCLES ){
   clock_t Ntime=mstime();
-  print("\n cols=",cur,"A=",A,"valid/fail:",swaps,"/",(fail),"\nswap/ms:",1.0*swapt/Ntime,"fail/ms:",1.0*tfail/Ntime);
+  print("\n cols=",cur,"A=",A,"valid/fail:",swaps,"/",(fail),"\nswap:",1.0*swapt/Ntime,"fail:",1.0*tfail/Ntime,"loops:",1.0*loops/Ntime);
   print("\nT:",Ntime,"ms Col%",100.0*(N-cur)/N,"Swapt",swapt,"Valid%",100.0*swapt/tswaps);cend=__rdtsc();}}
 //--------------------------------------------
 void linearsolve(){
@@ -77,12 +81,15 @@ cend=__rdtsc();
 #if QDEBUG
 print("\nT:",mstime()," ms Collisions:",cur," SearchLim:",minsearch);
 #endif
-loop:;valr=randuint64();
+loop:;
+#if QDEBUG
+loops++;
+#endif
+valr=randuint64();
 A=modreduce((valr>>32),N);
 B=modreduce(valr&0xffffffff,N);
-if( (qccount(B)+qccount(A)<1)||A==B )goto loop;
-
-swap_loc:;
+//if(0==(qccount(B)+qccount(A))||A==B)goto loop;
+if( !(qccount(B)+qccount(A)) ||A==B)goto loop;
 #if QDEBUG
 dir=1;
 #endif
@@ -92,7 +99,8 @@ if(cur>best){
 dir=-1;fail++;
 #endif
 swapc(A,B);
-goto loop;}else if(cur==best){;goto loop;}
+goto loop;}
+ if(cur==best){;goto loop;}
 
 #if QDEBUG
 tfail+=fail;swapt+=swaps;
@@ -103,6 +111,7 @@ fail=0;;swaps=0;
 
 
 best=cur;
+#if NONLINEAR
 if(best<minsearch ){//ending speedup for N>1024
 #if QDEBUG
 print("\nEnd search:",mstime()," ms Collisions:",best);
@@ -128,7 +137,7 @@ dir=-1;fail++;
 swapc(A,B);goto innerloop2;
 
 }
-
+#endif
 
 if(cur>0){goto loop;;}
 endl:; //end loop
@@ -136,8 +145,6 @@ endl:; //end loop
  print("\nSolved N=",N," at:",mstime(),"ms Swaps:",swapt,"Fails:",tfail,"\n");
 #endif
 }
-
-
 //===================Solver===========================
 void solve(void){
 u64 A,B;
@@ -162,14 +169,13 @@ if(!diagR||!diagL){perror("Diag arrays size too large for malloc");exit(3);}
 for(size_t i=0;i<N;i++)board[i]=i;//unique rows/cols to swap.
 #if SCRAMBLE //speedup board solutions
 u64 timeseed=1111;
-u64 oldA,B;
 setrseed(timeseed,1-~timeseed,timeseed-~timeseed,~timeseed+timeseed);
 for(int z=0;z<SCRAMBLE;z++){
 for(size_t i=0;i<N;i++){
 u64 valr=randuint64();
-oldA=(valr>>32);B=valr&0xffffffff;
-oldA=modreduce(oldA,N);B=modreduce(B,N);
-swapq(board[oldA],board[B]);
+A=(valr>>32);B=valr&0xffffffff;
+A=modreduce(A,N);B=modreduce(B,N);
+swapq(board[A],board[B]);
 }}
 #endif
 solve();
