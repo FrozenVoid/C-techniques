@@ -1,6 +1,6 @@
 #include "Util/void.h"//https://github.com/FrozenVoid/C-headers
 //linear ~O(N) NQueens  solver
-#define NCYCLES 4 //report each NCYCLES
+#define NCYCLES 8 //report each NCYCLES
 #define mstime() ((clock())/(CLOCKS_PER_SEC/1000))
 #define tsctime(c) ((__rdtsc()-c)>>30)
 #define SCRAMBLE 2//scramble iters 0-N
@@ -13,8 +13,10 @@ i64 swapt=0,swaps=0,fstcalls=0;//valid swaps total(set if QDEBUG enabled)
 size_t fail=0,tfail=0;
 uint64_t log2index(size_t X){return ((unsigned) (63 - __builtin_clzll((X)) ))      ;}
 #define swapq(x,y) ({int temp=x;x=y;y=temp;})
-inline void swapc(size_t x,size_t y){
+inline void swapc(size_t x,size_t y,size_t best){
 i64  clx,crx,cly,cry;
+
+
 //update sums/first/last
 #if QDEBUG
 swaps++;//valid swaps total
@@ -58,11 +60,10 @@ fstcalls++;//record first column calls
 for(size_t i=0;i<len;i++){
 if((diagL[board[i]+i]>1)||(diagR[board[i]+(len-i)]>1)){return i;}}
 return len;;}
-//queen collisons at position
-inline size_t qccount(int* q,size_t P){
-size_t lP=q[P]+P,rP=q[P]+(N-P);
-return ((diagL[lP]-1)*(diagL[lP]>1))+((diagR[rP]-1)*(diagR[rP]>1));
-;}
+//queen collisons at position: 2=none,2+=collision
+inline i32 qccount(int* q,size_t P){
+//cannot be zero due being set from q[]
+return ((diagL[q[P]+P]))+((diagR[q[P]+(N-P)]))-2;}
 //--------------------------
 void printboard(int*q,size_t N){print("\n");for(size_t i=0;i<N;i++)printf("%d\n",q[i]+1);}
 //https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
@@ -77,26 +78,29 @@ uint32_t rndcell(){return modreduce(randuint32(),N);}
 void linearsolve(int* q,int N){
 u64 A=0,B=0;int Aflag=0;
 u64 cend=__rdtsc();
-const size_t low=(log2index(N)*log2index(N))/4;
+const size_t low=(log2index(N));
 u64 cur=countudiag(),best=cur,lcur=cur;
 #if QDEBUG
 print("Start:",mstime()," ms",cur,"intersections",low,"lowlimit\n");
 #endif
-while(cur){
+
 loop:;u64 valr=randuint64();
-A=Aflag?modreduce((valr>>32),N):A;
+//A=Aflag?modreduce((valr>>32),N):A;
+A=modreduce((valr>>32),N);
 B=modreduce(valr&0xffffffff,N);
-if(!qccount(q,B))goto loop;
+//avoid swapping non-collision columns
+if((qccount(q,B)+qccount(q,A))==0)goto loop;
+
 swap_loc:;
-swapc(A,B);
+swapc(A,B,best);//test swap
 cur=countudiag();//count diagonal intersects
-if(cur==best){Aflag=1;goto loop;}
-if(cur>best){swapc(A,B);fail++;
-if(best<low && Aflag){A=fstcols(q,N);Aflag=0;
+if(cur>best){swapc(A,B,0);fail++;
+if(0&&best<low && Aflag){A=fstcols(q,N);Aflag=0;
 B=modreduce((uint32_t)(randuint64()&0xffffffff),N);
 goto swap_loc;}
 goto loop;}
-
+if(cur==best){//Aflag=1;
+goto loop;}
 
 #if QDEBUG
   if(tsctime(cend)>NCYCLES ){
@@ -110,7 +114,7 @@ fail=0;;swaps=0;best=cur;Aflag=1;
 
 
 
-} //end loop
+if(cur>0)goto loop; //end loop
 #if QDEBUG
  print("\nSolved at:",mstime(),"ms Collisions:",cur,"Swaps:",swapt,"Fails:",tfail,"\n");
 #endif
