@@ -94,26 +94,27 @@ val_t rndcell(){return modreduce(randuint32(),N);}
   print("\nT:",Ntime,"ms Col%",100.0*(N-cur)/N,"Swapt",swapt,"Valid%",100.0*swapt/tswaps);cend=__rdtsc();}}
 //--------------------------------------------
 void linearsolve(){
- A=0,B=0,valr=0;val_t minsearch=N>1024?log2index(N)/3:0;
-cend=__rdtsc();
+ A=0,B=0,valr=0;
+ //large board speedup
+ val_t minsearch=N>200000?log2index(N)/3:0;
+cend=__rdtsc();u64 lc=0,lcmax=N;
  cur=countudiag(),best=cur;
 #if QDEBUG
 print("\nT:",mstime()," ms Collisions:",cur," SearchLim:",minsearch);
 #endif
+//--------Main loop-------------
 loop:;
 #if QDEBUG
 loops++;
 #endif
 do{A=modreduce(rndgen32(),N);}while(!qccount(A));
-do{duploc:;B=modreduce(rndgen32(),N);}while(!qccount(B));
-if(A==B){//tseedw++;
-goto duploc;}
-
-
+duploc:;lc=0;do{B=modreduce(rndgen32(),N); lc++;}while( !qccount(B) && (lc<lcmax) );
+if(A==B)goto duploc;
 #if QDEBUG
 dir=1;
 #endif
 swapc(A,B);cur=countudiag();//count diagonal intersects
+//----bad swap-----
 if(cur>best){
 #if QDEBUG
 dir=-1;fail++;
@@ -121,26 +122,24 @@ dir=-1;fail++;
 swapc(A,B);
 goto loop;}
  if(cur==best){;goto loop;}
-
+//-----good swap------
 #if QDEBUG
 tfail+=fail;swapt+=swaps;
 info();//new iteration update
 fail=0;;swaps=0;
 #endif
-
-
-
 best=cur;
+//=================Search at ending========================
 #if NONLINEAR
-if(best<minsearch ){//ending speedup for N>1024
+if( best<minsearch ){//ending speedup for N>1024
 #if QDEBUG
 print("\nEnd search:",mstime()," ms Collisions:",best);
 #endif
 innerloop:;
 B=fstcols();
-innerloop2:;
-A=modreduce(rndgen32(),N);
-//valr=rndgen64();A=modreduce((valr>>32),N);
+innerloop2:;lc=0,lcmax=1023;
+do{A=modreduce(rndgen32(),N);lc++;}while(!qccount(A) && lc<lcmax );
+if(A==B)goto innerloop2;
 
 #if QDEBUG
 dir=1;
@@ -161,6 +160,7 @@ swapc(A,B);goto innerloop2;
 #endif
 
 if(cur>0){goto loop;;}
+//-----------Success-----
 endl:; //end loop
 #if QDEBUG
  print("\nSolved N=",N," at:",mstime(),"ms Swaps:",swapt,"Fails:",tfail,"\n",tseedw," calls\n");
@@ -206,7 +206,7 @@ for(size_t i=0;i<N;i++){
 verify+=(diagL[board[i]+i])!=1;
 verify+=(diagR[board[i]+(N-i)])!=1;
 }
-//halt on error(stops nqtest.sh)
-if(verify){print("Invalid solution to N=",N);char tt=getchar();}
+//halt on error(stops nqtest.sh) (fix:disable NONLINEAR search
+if(verify){print("Invalid solution to N=",N,"Collisions:",verify);char tt=getchar();}
 if((argc==3 && (argv[2][0]=='p'))){printboard();}
 return 0;}
