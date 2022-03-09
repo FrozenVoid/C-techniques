@@ -1,4 +1,5 @@
 Example
+#define DEBUGLEVEL 0
 #if DEBUGLEVEL==1
 #define DBG(X) func(X)
 #elif DEBUGLEVEL==2
@@ -6,3 +7,16 @@ Example
 #else
 #define DBG(X) ;
 #endif
+
+
+int main(){
+#undef DEBUGLEVEL
+#define DEBUGLEVEL 1
+//code
+#undef DEBUGLEVEL
+#define DEBUGLEVEL 2
+//code
+#undef DEBUGLEVEL
+#define DEBUGLEVEL 0
+
+}
