@@ -11,6 +11,7 @@ Example
 //test case
 int main(){
 #undef DEBUGLEVEL
+//at this point DEBUGLEVEL can be switched 0,1,2
 #define DEBUGLEVEL 1
 #if DEBUGLEVEL==1
 #define DBG(X) func(X)
@@ -21,6 +22,7 @@ int main(){
 #endif
 //code
 #undef DEBUGLEVEL
+//at this point DEBUGLEVEL can be switched 0,1,2
 #define DEBUGLEVEL 2
 #if DEBUGLEVEL==1
 #define DBG(X) func(X)
@@ -31,6 +33,7 @@ int main(){
 #endif
 //code
 #undef DEBUGLEVEL
+//at this point DEBUGLEVEL can be switched 0,1,2 
 #define DEBUGLEVEL 0
 #if DEBUGLEVEL==1
 #define DBG(X) func(X)
