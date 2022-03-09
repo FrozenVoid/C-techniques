@@ -1,6 +1,8 @@
 Example
 #if DEBUGLEVEL==1
 #define DBG(X) func(X)
+#elif DEBUGLEVEL==2
+#define DBG(X) verbose_func(X)
 #else
 #define DBG(X) ;
 #endif
