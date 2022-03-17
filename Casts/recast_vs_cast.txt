@@ -1,0 +1,10 @@
+Recast(in  C++ reinterpret_cast)
+is casting without arithmethic
+operation, using a new interpretation
+
+//Cast with conversion operations
+float a=2.5; int b=(int)a;
+
+//Recast : value is reinterpreted as new type
+float a=2.5; int b=*(int*)&a;
+//the binary value of a is same as b;
