@@ -13,6 +13,8 @@ u64 hashxoradd(const u8* data,const size_t len){
 //faster xor-add 
 u64 res=0;u64 last=0x1234567812345678;
 const u64* data8=(u64*)&data;
-for(size_t i=0;i<(len/8);i++){res^=data8[i];res+=last;last=~data8[i];}
-for(size_t i=len-(len&7);i<len;i++){res^=data[i];res+=last;last=~data[i];}
+for(size_t i=0;i<(len/8);i++){
+  res^=data8[i];res+=last;last=~data8[i];}
+for(size_t i=len-(len&7);i<len;i++){
+  res^=data[i];res+=last;last=data[i];}
 return res;}
