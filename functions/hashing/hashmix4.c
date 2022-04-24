@@ -5,10 +5,10 @@ u64 hashaddrt(const u8* data,const size_t len){
 u64 res=0;u64 last=0x1234567812345678;
 const u64* data8=(u64*)&data;
 for(size_t i=0;i<(len/8);i++){
-res+=last+rotate64(data8[i],res&63);last=~data8[i];}
-u64 rest[1];
+res+=last;res+=rotate64(data8[i],res&63);last=~data8[i];}
+u64 rest[1]={0};
 memcpy(&rest[0],&data[(len/8)<<3],len-((len/8)<<3));
-res+=last+rotate64(rest[0],res&63);
+res+=last;res+=rotate64(rest[0],res&63);
 return res;}
 
 
