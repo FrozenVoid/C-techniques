@@ -1,4 +1,17 @@
 static inline u64 rotate64(u64 x,u32 bits){return (x>>bits)|(x<<(64-bits));}
+u64 hashaddrt3(const u8* data,const size_t len){
+//add with rotate2
+u64 res=0x1234567812345678;
+const u64* data8=(u64*)data;
+for(size_t i=0;i<len/8;i++){
+const u64 d=data8[i],d2=~d;
+res+=rotate64(d,(res)&63);
+res-=rotate64(d2,(res)&63);
+res+=rotate64(d2,(res)&63);
+res-=rotate64(d,(res)&63);}
+for(size_t i=(len/8)<<3;i<len;i++)res+=rotate64(data[i]+res,data[i]&63);
+return res;}
+
 
 u64 hashaddrt2(const u8* data,const size_t len){
 //add with rotate2
