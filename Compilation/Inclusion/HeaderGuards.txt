@@ -1,0 +1,15 @@
+A set of preprocessor commands that 
+avoid double inclusion of content.
+example:
+
+#ifndef HEADER_NAME_INCLUDED
+#define HEADER_NAME_INCLUDED
+/* Code */
+#endif
+
+for functions/macros same technique 
+is used as modular 
+#ifndef FUNCTION_NAME_DEFINED
+#define FUNCTION_NAME_DEFINED
+/* function/macro definition */
+#endif
