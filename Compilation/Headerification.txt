@@ -1,0 +1,9 @@
+Headerification is used to enchance 
+whole program optimization. The technique
+converts multiple .c files into one .c file,
+without altering code structure.
+The .c files are #include'd into 
+central header, which is included into 
+main .c file.
+using '#pragma once' or header guards
+is strongly advised in all files.
