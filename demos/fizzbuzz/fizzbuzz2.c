@@ -1,4 +1,3 @@
-putchar(c);
 #define buzz(bzz,bees) ({fizzbuzz=fizzbuzz?:1000000000;\
 do{putchar(bees);}while(fizzbuzz/=bzz);putchar('\x0a');})
 #define buzzing(bee) buzz(256,fizzbuzz)
