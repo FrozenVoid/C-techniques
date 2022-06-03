@@ -1,4 +1,3 @@
-putchar(c);
 #define buzzing(bee) ({do{putchar(fizzbuzz);}while(fizzbuzz>>=8);putchar('\x0a');})
 #define twin(bee) ({fizzbuzz=bee;do{\
 putchar("0123456789ABCDEF"[fizzbuzz>>60]);}while(fizzbuzz<<=4);\
