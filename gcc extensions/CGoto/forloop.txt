@@ -3,5 +3,6 @@ Example of for loop replacement:
 void* next=&&loop1;
 size_t i=0,sum=0;loop1:;sum+=i;i++;
 next=(i==100000000000ULL)?&&end1:&&loop1;
+//eqv to goto *((i==100000000000ULL)?&&end1:&&loop1)
 goto *next;end1:;
 print(sum);
