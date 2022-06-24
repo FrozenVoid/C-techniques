@@ -1,0 +1,13 @@
+Computed goto can be used to
+create a subroutine block interleaved/combined
+with normal code:
+
+paramX=y;
+void* return_loc=&&next_line;
+goto subrout;
+next_line:;
+/other code/
+-=---------------
+subrout:
+/code block/
+goto *return_loc;
