@@ -1,0 +1,11 @@
+To skip an if(cond) 
+computed goto is used with a
+void* skipto=&&noskip;
+//altered at condition change(if(cond))
+//when skipto=&&skip; code1 bypass occurs
+goto *skipto;
+noskip:
+/code1/
+if(cond){do X} transforms to -> do X
+skip:;
+
