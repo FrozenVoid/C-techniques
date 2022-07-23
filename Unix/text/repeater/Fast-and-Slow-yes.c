@@ -7,11 +7,13 @@ fastyes() a much faster function, wins benchmarks but practically useless
 the slowyes is 'worse is better' approach to software
 the fastyes is the 'right thing' but its domain(speed) doesn't have application in actual user demand(repeat user keystrokes)
 
-*/
+
 //---slowyes
 #include <stdio.h>//yes.c Output first arg or ("y")
 int main(int argc,char**argv){
 for(;;){puts(argc>1?argv[1]:"y");}}
+
+*/
 //---fastyes
 #include <stdio.h>//yes.c Output first arg or ("y")
 #include <string.h>
